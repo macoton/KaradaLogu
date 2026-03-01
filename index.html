@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>KaradaLogu</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        nav button { margin-right: 10px; }
+        section { display: none; }
+        section.active { display: block; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>KaradaLogu</h1>
+
+    <nav>
+        <button id="btnInput">入力</button>
+        <button id="btnOutput">出力</button>
+        <button id="btnSettings">設定</button>
+    </nav>
+
+    <section id="section-input">
+        <h2>入力画面</h2>
+        <label for="txtValue">数字を入力:</label>
+        <input type="text" id="txtValue" maxlength="9" />
+        <p id="msg"></p>
+    </section>
+
+    <section id="section-output">
+        <h2>記録</h2>
+        <h3>体温</h3>
+        <table id="tblTemp">
+            <thead><tr><th>日時</th><th>体温</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <h3>血圧・脈拍</h3>
+        <table id="tblBP">
+            <thead><tr><th>日時</th><th>最高血圧</th><th>最低血圧</th><th>脈拍</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <section id="section-settings">
+        <h2>設定</h2>
+        <button id="btnClear">記録を削除</button>
+    </section>
+
+    <script src="app.js"></script>
+</body>
+</html>
