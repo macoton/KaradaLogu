@@ -7,6 +7,7 @@ const sections = {
 };
 
 function showSection(name) {
+    console.log('showSection', name);
     Object.values(sections).forEach(sec => sec.classList.remove('active'));
     sections[name].classList.add('active');
     if (name === 'input') {
@@ -139,6 +140,71 @@ function renderOutput() {
             tbNotes.appendChild(tr);
         });
     }
+}
+
+// summary helpers and renderer
+function get6HourDateKey(isoTimestamp) {
+    const d = new Date(isoTimestamp);
+    if (d.getHours() < 6) d.setDate(d.getDate() - 1);
+    return d.toISOString().split('T')[0];
+}
+
+function countToBar(count) {
+    let bar = '';
+    let remaining = count;
+    while (remaining >= 5) { bar += '正'; remaining -= 5; }
+    while (remaining >= 2) { bar += 'ー'; remaining -= 2; }
+    while (remaining >= 1) { bar += '、'; remaining -= 1; }
+    return bar || '0';
+}
+
+function renderSummary() {
+    console.log('renderSummary');
+    const { temps, bps, notes } = loadRecords();
+
+    const tbSummaryTemp = document.querySelector('#tblSummaryTemp tbody');
+    tbSummaryTemp.innerHTML = '';
+    temps.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.temp}</td>`;
+        tbSummaryTemp.appendChild(tr);
+    });
+
+    const tbSummaryBP = document.querySelector('#tblSummaryBP tbody');
+    tbSummaryBP.innerHTML = '';
+    bps.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.sys}</td><td>${r.dia}</td><td>${r.pulse}</td>`;
+        tbSummaryBP.appendChild(tr);
+    });
+
+    const notesByDateAndText = new Map();
+    notes.forEach(r => {
+        const dateKey = get6HourDateKey(r.timestamp);
+        const groupKey = `${dateKey}|${r.text}`;
+        notesByDateAndText.set(groupKey, (notesByDateAndText.get(groupKey) || 0) + 1);
+    });
+
+    const notesByDate = new Map();
+    notesByDateAndText.forEach((count, groupKey) => {
+        const [dateKey, text] = groupKey.split('|');
+        if (!notesByDate.has(dateKey)) notesByDate.set(dateKey, []);
+        notesByDate.get(dateKey).push({ text, count });
+    });
+
+    const tbSummaryNotes = document.querySelector('#tblSummaryNotes tbody');
+    tbSummaryNotes.innerHTML = '';
+    const sortedDates = Array.from(notesByDate.keys()).sort().reverse();
+    sortedDates.forEach(dateKey => {
+        const entriesForDate = notesByDate.get(dateKey);
+        entriesForDate.forEach((entry, idx) => {
+            const tr = document.createElement('tr');
+            const dateCell = idx === 0 ? dateKey : '';
+            const bar = countToBar(entry.count);
+            tr.innerHTML = `<td>${dateCell}</td><td>${entry.text} (${entry.count}回)</td><td>${bar}</td>`;
+            tbSummaryNotes.appendChild(tr);
+        });
+    });
 }
 
 // input handling
