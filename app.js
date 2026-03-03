@@ -188,36 +188,56 @@ function renderSummary() {
     });
     console.log('rendered bps', bps.length);
 
-    const notesByDateAndText = new Map();
+    // restructure data by content then date
+    const contentMap = new Map();
     notes.forEach(r => {
         const dateKey = get6HourDateKey(r.timestamp);
-        const groupKey = `${dateKey}|${r.text}`;
-        const existing = notesByDateAndText.get(groupKey);
-        if (existing) {
-            existing.count += 1;
-            if (r.timestamp > existing.latest) existing.latest = r.timestamp;
-        } else {
-            notesByDateAndText.set(groupKey, { count: 1, latest: r.timestamp });
+        const text = r.text;
+        if (!contentMap.has(text)) contentMap.set(text, new Map());
+        const dateMap = contentMap.get(text);
+        if (!dateMap.has(dateKey)) {
+            dateMap.set(dateKey, { count: 0, latest: r.timestamp });
         }
-    });
-    console.log('grouped notes', notesByDateAndText.size);
-
-    const notesByDate = new Map();
-    notesByDateAndText.forEach((v, groupKey) => {
-        const [dateKey, text] = groupKey.split('|');
-        if (!notesByDate.has(dateKey)) notesByDate.set(dateKey, []);
-        notesByDate.get(dateKey).push({ text, count: v.count, latest: v.latest });
+        const rec = dateMap.get(dateKey);
+        rec.count += 1;
+        if (r.timestamp > rec.latest) rec.latest = r.timestamp;
     });
 
     const tbSummaryNotes = document.querySelector('#tblSummaryNotes tbody');
     tbSummaryNotes.innerHTML = '';
-    const sortedDates = Array.from(notesByDate.keys()).sort().reverse();
-    // helper to format elapsed
+    // helper to format elapsed in h:mm:ss前
     function elapsed(ts) {
         const now = new Date();
         const d = now - new Date(ts);
         const sec = Math.floor(d/1000);
         const h = Math.floor(sec/3600);
+        const m = Math.floor((sec%3600)/60);
+        const s = sec % 60;
+        return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}前`;
+    }
+
+    // iterate each content group
+    contentMap.forEach((dateMap, text) => {
+        // header row for content
+        const hr = document.createElement('tr');
+        hr.innerHTML = `<td colspan="4">${text}</td>`;
+        tbSummaryNotes.appendChild(hr);
+        // sorted date keys
+        const dates = Array.from(dateMap.keys()).sort().reverse();
+        let latestTime = 0;
+        dates.forEach(dateKey => {
+            const rec = dateMap.get(dateKey);
+            const bar = countToBar(rec.count);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${dateKey}</td><td></td><td>${bar}</td><td></td>`;
+            tbSummaryNotes.appendChild(tr);
+            if (new Date(rec.latest) > latestTime) latestTime = new Date(rec.latest);
+        });
+        // footer elapsed row
+        const fr = document.createElement('tr');
+        fr.innerHTML = `<td colspan="3">最新経過</td><td>${elapsed(latestTime)}</td>`;
+        tbSummaryNotes.appendChild(fr);
+    });
         const m = Math.floor((sec%3600)/60);
         const s = sec % 60;
         return `${h}h${m}m${s}s前`;
