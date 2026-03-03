@@ -78,7 +78,11 @@ function renderNotes() {
     const notesContainer = document.querySelector('#notesContainer');
     if (!notesContainer) return;
     notesContainer.innerHTML = '';
-    notes.forEach(r => {
+    // show each distinct text only once (latest first)
+    const seen = new Set();
+    notes.slice().reverse().forEach(r => {
+        if (seen.has(r.text)) return;
+        seen.add(r.text);
         const btn = document.createElement('button');
         btn.textContent = r.text;
         btn.addEventListener('click', () => {
@@ -87,10 +91,6 @@ function renderNotes() {
             renderNotes();
         });
         notesContainer.appendChild(btn);
-        const span = document.createElement('span');
-        span.textContent = ` ${r.timestamp}`;
-        notesContainer.appendChild(span);
-        notesContainer.appendChild(document.createElement('br'));
     });
 }
 
