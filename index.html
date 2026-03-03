@@ -26,7 +26,7 @@
         <button id="btnInput">入力</button>
         <button id="btnOutput">出力</button>
         <button id="btnSummary">まとめ</button>
-        <button id="btnSettings">設定</button>
+        <button id="btnSettings">記録を確認</button>
     </nav>
 
     <section id="section-input">
@@ -58,8 +58,12 @@
     </section>
 
     <section id="section-settings">
-        <h2>設定</h2>
+        <h2>記録を確認</h2>
         <button id="btnClear">記録を削除</button>
+        <button id="btnExport">JSONで出力</button>
+        <button id="btnImport">JSONから読み込み</button>
+        <input type="file" id="fileInput" accept="application/json" style="display:none" />
+        <button id="btnGDrive">Google Drive認証</button>
     </section>
 
     <section id="section-summary">

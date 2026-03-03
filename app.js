@@ -305,13 +305,97 @@ function handleInput(e) {
 //txt.addEventListener('input', handleInput);
 txt.addEventListener('keydown', handleInput);
 
-// settings
-document.getElementById('btnClear').addEventListener('click', () => {
-    localStorage.removeItem('temps');
-    localStorage.removeItem('bps');
-    localStorage.removeItem('notes');
-    msg.textContent = '記録を全て削除しました。';
+// review/delete/export/import/google-drive helpers
+function confirmClear() {
+    if (confirm('本当にすべての記録を削除しますか？')) {
+        localStorage.removeItem('temps');
+        localStorage.removeItem('bps');
+        localStorage.removeItem('notes');
+        msg.textContent = '記録を全て削除しました。';
+    }
+}
+
+function exportJSON() {
+    const recs = loadRecords();
+    const dataStr = JSON.stringify(recs);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'karadalogu_export.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importJSON(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const obj = JSON.parse(e.target.result);
+            if (obj && typeof obj === 'object') {
+                if (confirm('既存の記録を上書きしますか？')) {
+                    ['temps', 'bps', 'notes'].forEach(k => {
+                        localStorage.setItem(k, JSON.stringify(obj[k] || []));
+                    });
+                    alert('インポート完了');
+                }
+            } else {
+                alert('正しいJSONではありません');
+            }
+        } catch (err) {
+            alert('読み込みに失敗: ' + err);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function handleImportClick() {
+    document.getElementById('fileInput').click();
+}
+
+function initGoogleDriveAuth() {
+    Promise.all([
+        fetch('/cgi-bin/apikey.cgi').then(r => r.text()),
+        fetch('/cgi-bin/clientid.cgi').then(r => r.text())
+    ]).then(([apiKey, clientId]) => {
+        console.log('Got GDrive keys', apiKey, clientId);
+        const script = document.createElement('script');
+        script.src = 'https://apis.google.com/js/api.js';
+        script.onload = () => {
+            window.gapi.load('client:auth2', () => {
+                gapi.client.init({
+                    apiKey: apiKey.trim(),
+                    clientId: clientId.trim(),
+                    scope: 'https://www.googleapis.com/auth/drive.file'
+                }).then(() => {
+                    console.log('gapi initialized');
+                    gapi.auth2.getAuthInstance().signIn().then(() => {
+                        alert('Google Drive認証完了');
+                    });
+                });
+            });
+        };
+        document.body.appendChild(script);
+    }).catch(err => {
+        alert('Google Driveのキー取得に失敗: ' + err);
+    });
+}
+
+// settings button listeners
+const btnClearEl = document.getElementById('btnClear');
+if (btnClearEl) btnClearEl.addEventListener('click', confirmClear);
+const btnExportEl = document.getElementById('btnExport');
+if (btnExportEl) btnExportEl.addEventListener('click', exportJSON);
+const btnImportEl = document.getElementById('btnImport');
+if (btnImportEl) btnImportEl.addEventListener('click', handleImportClick);
+const fileInputEl = document.getElementById('fileInput');
+if (fileInputEl) fileInputEl.addEventListener('change', e => {
+    if (e.target.files && e.target.files[0]) {
+        importJSON(e.target.files[0]);
+    }
 });
+const btnGDriveEl = document.getElementById('btnGDrive');
+if (btnGDriveEl) btnGDriveEl.addEventListener('click', initGoogleDriveAuth);
 
 // start on input
 showSection('input');
