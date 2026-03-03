@@ -214,6 +214,16 @@ let zoomLevel = 1;
 function applyZoom() {
     document.body.style.setProperty('--zoom', zoomLevel);
 }
+function autoFitZoom() {
+    // scale body so that its scrollWidth fits viewport width
+    const bodyWidth = document.body.scrollWidth;
+    if (bodyWidth > 0) {
+        const target = window.innerWidth / bodyWidth;
+        zoomLevel = Math.min(Math.max(target, 0.5), 3);
+        applyZoom();
+    }
+}
+
 document.getElementById('btnZoomIn').addEventListener('click', () => {
     zoomLevel = Math.min(3, zoomLevel + 0.1);
     applyZoom();
@@ -226,4 +236,7 @@ document.getElementById('btnZoomReset').addEventListener('click', () => {
     zoomLevel = 1;
     applyZoom();
 });
-applyZoom();
+
+// automatically fit to width on load/resize
+window.addEventListener('resize', autoFitZoom);
+autoFitZoom();
