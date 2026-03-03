@@ -78,9 +78,11 @@ function renderNotes() {
     const notesContainer = document.querySelector('#notesContainer');
     if (!notesContainer) return;
     notesContainer.innerHTML = '';
-    // show each distinct text only once (latest first)
+    // show each distinct text only once (latest first), cap to 20 buttons
     const seen = new Set();
+    let count = 0;
     notes.slice().reverse().forEach(r => {
+        if (count >= 20) return; // stop if we've added enough
         if (seen.has(r.text)) return;
         seen.add(r.text);
         const btn = document.createElement('button');
@@ -91,6 +93,7 @@ function renderNotes() {
             renderNotes();
         });
         notesContainer.appendChild(btn);
+        count++;
     });
 }
 
