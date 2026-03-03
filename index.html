@@ -25,6 +25,7 @@
     <nav>
         <button id="btnInput">入力</button>
         <button id="btnOutput">出力</button>
+        <button id="btnSummary">まとめ</button>
         <button id="btnSettings">設定</button>
     </nav>
 
@@ -59,6 +60,25 @@
     <section id="section-settings">
         <h2>設定</h2>
         <button id="btnClear">記録を削除</button>
+    </section>
+
+    <section id="section-summary">
+        <h2>まとめ</h2>
+        <h3>体温</h3>
+        <table id="tblSummaryTemp">
+            <thead><tr><th>日時</th><th>体温</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <h3>血圧・脈拍</h3>
+        <table id="tblSummaryBP">
+            <thead><tr><th>日時</th><th>最高血圧</th><th>最低血圧</th><th>脈拍</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <h3>その他の記録内容（内容ごとの出现回数）</h3>
+        <table id="tblSummaryNotes">
+            <thead><tr><th>日付</th><th>内容</th><th>榜表欄</th></tr></thead>
+            <tbody></tbody>
+        </table>
     </section>
 
     <script src="app.js"></script>

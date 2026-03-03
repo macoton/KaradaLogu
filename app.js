@@ -2,6 +2,7 @@
 const sections = {
     input: document.getElementById('section-input'),
     output: document.getElementById('section-output'),
+    summary: document.getElementById('section-summary'),
     settings: document.getElementById('section-settings')
 };
 
@@ -10,13 +11,19 @@ function showSection(name) {
     sections[name].classList.add('active');
     if (name === 'input') {
         renderNotes();
+    } else if (name === 'output') {
+        renderOutput();
+    } else if (name === 'summary') {
+        renderSummary();
     }
 }
 
 document.getElementById('btnInput').addEventListener('click', () => showSection('input'));
 document.getElementById('btnOutput').addEventListener('click', () => {
     showSection('output');
-    renderOutput();
+});
+document.getElementById('btnSummary').addEventListener('click', () => {
+    showSection('summary');
 });
 document.getElementById('btnSettings').addEventListener('click', () => showSection('settings'));
 
