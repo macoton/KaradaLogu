@@ -238,22 +238,8 @@ function renderSummary() {
         fr.innerHTML = `<td colspan="3">最新経過</td><td>${elapsed(latestTime)}</td>`;
         tbSummaryNotes.appendChild(fr);
     });
-        const m = Math.floor((sec%3600)/60);
-        const s = sec % 60;
-        return `${h}h${m}m${s}s前`;
-    }
-    sortedDates.forEach(dateKey => {
-        const entriesForDate = notesByDate.get(dateKey);
-        entriesForDate.forEach((entry, idx) => {
-            const tr = document.createElement('tr');
-            const dateCell = idx === 0 ? dateKey : '';
-            const bar = countToBar(entry.count);
-            const rel = elapsed(entry.latest);
-            tr.innerHTML = `<td>${dateCell}</td><td>${entry.text}</td><td>${bar}</td><td>${rel}</td>`;
-            tbSummaryNotes.appendChild(tr);
-        });
-    });
 }
+
 
 // input handling
 const txt = document.getElementById('txtValue');
