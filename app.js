@@ -112,31 +112,37 @@ function handleInput(e) {
     let s = txt.value.trim();
     s = normalizeDigits(s);
 
-    // if all digits handle as before
-    if (/^[0-9]*$/.test(s)) {
-        msg.textContent = '';
+    if (s.length === 0) {
+        msg.textContent = '入力が空です。';
+        return;
+    }
+
+    // numbers only and exact lengths for special handling
+    if (/^[0-9]+$/.test(s)) {
         if (s.length === 3) {
             const num = parseInt(s, 10);
             const temp = num / 10;
             addTempRecord(temp);
             msg.textContent = `体温 ${temp} を記録しました。`;
             clearInput();
-        } else if (s.length === 9) {
+            return;
+        }
+        if (s.length === 9) {
             const sys = parseInt(s.substr(0,3),10);
             const dia = parseInt(s.substr(3,3),10);
             const pulse = parseInt(s.substr(6,3),10);
             addBPRecord(sys, dia, pulse);
             msg.textContent = `血圧 ${sys}/${dia} 脈拍 ${pulse} を記録しました。`;
             clearInput();
+            return;
         }
-    } else if (s.length > 0) {
-        // record any other text as a note
-        addNoteRecord(s);
-        msg.textContent = `メモ "${s}" を記録しました。`;
-        clearInput();
-    } else {
-        msg.textContent = '入力が空です。';
+        // numeric, but length not 3 or 9: fall through to note
     }
+
+    // anything else (mixed or wrong-length numbers) becomes a note
+    addNoteRecord(s);
+    msg.textContent = `メモ "${s}" を記録しました。`;
+    clearInput();
 }
 
 // use Enter key instead of input event
