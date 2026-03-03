@@ -160,6 +160,8 @@ function countToBar(count) {
 
 function renderSummary() {
     console.log('renderSummary');
+    const recs = loadRecords();
+    console.log('loaded records', recs.temps.length, recs.bps.length, recs.notes.length);
     const { temps, bps, notes } = loadRecords();
 
     const tbSummaryTemp = document.querySelector('#tblSummaryTemp tbody');
@@ -169,6 +171,7 @@ function renderSummary() {
         tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.temp}</td>`;
         tbSummaryTemp.appendChild(tr);
     });
+    console.log('rendered temps', temps.length);
 
     const tbSummaryBP = document.querySelector('#tblSummaryBP tbody');
     tbSummaryBP.innerHTML = '';
@@ -177,6 +180,7 @@ function renderSummary() {
         tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.sys}</td><td>${r.dia}</td><td>${r.pulse}</td>`;
         tbSummaryBP.appendChild(tr);
     });
+    console.log('rendered bps', bps.length);
 
     const notesByDateAndText = new Map();
     notes.forEach(r => {
@@ -184,6 +188,7 @@ function renderSummary() {
         const groupKey = `${dateKey}|${r.text}`;
         notesByDateAndText.set(groupKey, (notesByDateAndText.get(groupKey) || 0) + 1);
     });
+    console.log('grouped notes', notesByDateAndText.size);
 
     const notesByDate = new Map();
     notesByDateAndText.forEach((count, groupKey) => {
