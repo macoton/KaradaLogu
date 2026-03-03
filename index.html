@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>KaradaLogu</title>
     <style>
-        body { font-family: sans-serif; margin: 20px; }
+        body { font-family: sans-serif; margin: 20px; --zoom:1; transform-origin: top left; transform: scale(var(--zoom)); }
         nav button { margin-right: 10px; }
         section { display: none; font-size: 1.3em; }
         section.active { display: block; width: 90vw; max-width: 1000px; }
@@ -21,6 +21,11 @@
         <button id="btnInput">入力</button>
         <button id="btnOutput">出力</button>
         <button id="btnSettings">設定</button>
+        <span id="zoomControls" style="margin-left:20px;">
+            <button id="btnZoomOut">－</button>
+            <button id="btnZoomIn">＋</button>
+            <button id="btnZoomReset">リセット</button>
+        </span>
     </nav>
 
     <section id="section-input">

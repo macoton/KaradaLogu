@@ -208,3 +208,22 @@ document.getElementById('btnClear').addEventListener('click', () => {
 
 // start on input
 showSection('input');
+
+// zoom functionality
+let zoomLevel = 1;
+function applyZoom() {
+    document.body.style.setProperty('--zoom', zoomLevel);
+}
+document.getElementById('btnZoomIn').addEventListener('click', () => {
+    zoomLevel = Math.min(3, zoomLevel + 0.1);
+    applyZoom();
+});
+document.getElementById('btnZoomOut').addEventListener('click', () => {
+    zoomLevel = Math.max(0.5, zoomLevel - 0.1);
+    applyZoom();
+});
+document.getElementById('btnZoomReset').addEventListener('click', () => {
+    zoomLevel = 1;
+    applyZoom();
+});
+applyZoom();
