@@ -224,19 +224,6 @@ function autoFitZoom() {
     }
 }
 
-document.getElementById('btnZoomIn').addEventListener('click', () => {
-    zoomLevel = Math.min(3, zoomLevel + 0.1);
-    applyZoom();
-});
-document.getElementById('btnZoomOut').addEventListener('click', () => {
-    zoomLevel = Math.max(0.5, zoomLevel - 0.1);
-    applyZoom();
-});
-document.getElementById('btnZoomReset').addEventListener('click', () => {
-    zoomLevel = 1;
-    applyZoom();
-});
-
 // automatically fit to width on load/resize
 window.addEventListener('resize', autoFitZoom);
 autoFitZoom();
