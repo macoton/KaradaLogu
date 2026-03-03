@@ -150,12 +150,12 @@ function get6HourDateKey(isoTimestamp) {
 }
 
 function countToBar(count) {
-    let bar = '';
-    let remaining = count;
-    while (remaining >= 5) { bar += '正'; remaining -= 5; }
-    while (remaining >= 2) { bar += 'ー'; remaining -= 2; }
-    while (remaining >= 1) { bar += '、'; remaining -= 1; }
-    return bar || '0';
+    // alternate between ─ and │
+    let s = '';
+    for (let i = 0; i < count; i++) {
+        s += (i % 2 === 0) ? '─' : '│';
+    }
+    return s || '0';
 }
 
 function renderSummary() {
@@ -206,7 +206,7 @@ function renderSummary() {
             const tr = document.createElement('tr');
             const dateCell = idx === 0 ? dateKey : '';
             const bar = countToBar(entry.count);
-            tr.innerHTML = `<td>${dateCell}</td><td>${entry.text} (${entry.count}回)</td><td>${bar}</td>`;
+            tr.innerHTML = `<td>${dateCell}</td><td>${entry.text}</td><td>${bar}</td>`;
             tbSummaryNotes.appendChild(tr);
         });
     });
