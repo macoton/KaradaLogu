@@ -221,8 +221,8 @@ function autoFitZoom() {
     const titleWidth = title ? title.scrollWidth : 0;
     const reference = Math.max(bodyWidth, titleWidth, 1);
     const target = window.innerWidth / reference;
-    // limit zoom to no more than 2× for reasonable size
-    zoomLevel = Math.min(Math.max(target, 0.5), 2);
+    // limit zoom to no more than 4× for larger heading
+    zoomLevel = Math.min(Math.max(target, 0.5), 4);
     applyZoom();
 }
 
