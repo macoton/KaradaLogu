@@ -7,10 +7,11 @@
         body { font-family: sans-serif; margin: 20px; }
         nav button { margin-right: 10px; }
         section { display: none; }
-        section.active { display: block; }
+        section.active { display: block; width: 90vw; max-width: 1000px; }
         table { border-collapse: collapse; width: 100%; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
         #notesContainer { max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; }
+        #notesContainer button { font-size: 1.2em; margin: 4px; padding: 8px 12px; }
     </style>
 </head>
 <body>
@@ -23,7 +24,7 @@
     </nav>
 
     <section id="section-input">
-        <h2>入力画面</h2>
+        <h2>入力</h2>
         <label for="txtValue">テキストを入力:</label>
         <input type="text" id="txtValue" />
         <p id="msg"></p>
@@ -32,7 +33,7 @@
     </section>
 
     <section id="section-output">
-        <h2>記録</h2>
+        <h2>出力</h2>
         <h3>体温</h3>
         <table id="tblTemp">
             <thead><tr><th>日時</th><th>体温</th></tr></thead>

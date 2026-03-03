@@ -97,6 +97,16 @@ function renderNotes() {
     });
 }
 
+// convert ISO timestamp to local string without T/Z
+function formatTimestamp(ts) {
+    try {
+        const d = new Date(ts);
+        return d.toLocaleString();
+    } catch {
+        return ts;
+    }
+}
+
 function renderOutput() {
     const { temps, bps, notes } = loadRecords();
     const tbTemp = document.querySelector('#tblTemp tbody');
@@ -105,20 +115,20 @@ function renderOutput() {
     tbTemp.innerHTML = '';
     temps.forEach(r => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${r.timestamp}</td><td>${r.temp}</td>`;
+        tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.temp}</td>`;
         tbTemp.appendChild(tr);
     });
     tbBP.innerHTML = '';
     bps.forEach(r => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${r.timestamp}</td><td>${r.sys}</td><td>${r.dia}</td><td>${r.pulse}</td>`;
+        tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.sys}</td><td>${r.dia}</td><td>${r.pulse}</td>`;
         tbBP.appendChild(tr);
     });
     if (tbNotes) {
         tbNotes.innerHTML = '';
         notes.forEach(r => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${r.timestamp}</td><td>${r.text}</td>`;
+            tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.text}</td>`;
             tbNotes.appendChild(tr);
         });
     }
