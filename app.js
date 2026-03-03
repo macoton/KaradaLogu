@@ -21,12 +21,14 @@ document.getElementById('btnSettings').addEventListener('click', () => showSecti
 function loadRecords() {
     const temps = JSON.parse(localStorage.getItem('temps') || '[]');
     const bps = JSON.parse(localStorage.getItem('bps') || '[]');
-    return { temps, bps };
+    const notes = JSON.parse(localStorage.getItem('notes') || '[]');
+    return { temps, bps, notes };
 }
 
-function saveRecords({ temps, bps }) {
+function saveRecords({ temps, bps, notes }) {
     localStorage.setItem('temps', JSON.stringify(temps));
     localStorage.setItem('bps', JSON.stringify(bps));
+    localStorage.setItem('notes', JSON.stringify(notes));
 }
 
 function addTempRecord(value) {
@@ -36,9 +38,15 @@ function addTempRecord(value) {
 }
 
 function addBPRecord(sys, dia, pulse) {
-    const { temps, bps } = loadRecords();
+    const { temps, bps, notes } = loadRecords();
     bps.push({ timestamp: new Date().toISOString(), sys, dia, pulse });
-    saveRecords({ temps, bps });
+    saveRecords({ temps, bps, notes });
+}
+
+function addNoteRecord(text) {
+    const { temps, bps, notes } = loadRecords();
+    notes.push({ timestamp: new Date().toISOString(), text });
+    saveRecords({ temps, bps, notes });
 }
 
 function renderOutput() {
@@ -57,6 +65,25 @@ function renderOutput() {
         tr.innerHTML = `<td>${r.timestamp}</td><td>${r.sys}</td><td>${r.dia}</td><td>${r.pulse}</td>`;
         tbBP.appendChild(tr);
     });
+
+    // render notes as buttons with timestamp
+    const notesContainer = document.querySelector('#notesContainer');
+    if (notesContainer) {
+        notesContainer.innerHTML = '';
+        notes.forEach(r => {
+            const btn = document.createElement('button');
+            btn.textContent = r.text;
+            btn.addEventListener('click', () => {
+                addNoteRecord(r.text);
+                renderOutput();
+            });
+            notesContainer.appendChild(btn);
+            const span = document.createElement('span');
+            span.textContent = ` ${r.timestamp}`;
+            notesContainer.appendChild(span);
+            notesContainer.appendChild(document.createElement('br'));
+        });
+    }
 }
 
 // input handling
@@ -85,24 +112,30 @@ function handleInput(e) {
     let s = txt.value.trim();
     s = normalizeDigits(s);
 
-    if (!/^[0-9]*$/.test(s)) {
-        msg.textContent = '数字のみ入力してください。';
-        return;
-    }
-    msg.textContent = '';
-    if (s.length === 3) {
-        const num = parseInt(s, 10);
-        const temp = num / 10;
-        addTempRecord(temp);
-        msg.textContent = `体温 ${temp} を記録しました。`;
+    // if all digits handle as before
+    if (/^[0-9]*$/.test(s)) {
+        msg.textContent = '';
+        if (s.length === 3) {
+            const num = parseInt(s, 10);
+            const temp = num / 10;
+            addTempRecord(temp);
+            msg.textContent = `体温 ${temp} を記録しました。`;
+            clearInput();
+        } else if (s.length === 9) {
+            const sys = parseInt(s.substr(0,3),10);
+            const dia = parseInt(s.substr(3,3),10);
+            const pulse = parseInt(s.substr(6,3),10);
+            addBPRecord(sys, dia, pulse);
+            msg.textContent = `血圧 ${sys}/${dia} 脈拍 ${pulse} を記録しました。`;
+            clearInput();
+        }
+    } else if (s.length > 0) {
+        // record any other text as a note
+        addNoteRecord(s);
+        msg.textContent = `メモ "${s}" を記録しました。`;
         clearInput();
-    } else if (s.length === 9) {
-        const sys = parseInt(s.substr(0,3),10);
-        const dia = parseInt(s.substr(3,3),10);
-        const pulse = parseInt(s.substr(6,3),10);
-        addBPRecord(sys, dia, pulse);
-        msg.textContent = `血圧 ${sys}/${dia} 脈拍 ${pulse} を記録しました。`;
-        clearInput();
+    } else {
+        msg.textContent = '入力が空です。';
     }
 }
 
@@ -114,6 +147,7 @@ txt.addEventListener('keydown', handleInput);
 document.getElementById('btnClear').addEventListener('click', () => {
     localStorage.removeItem('temps');
     localStorage.removeItem('bps');
+    localStorage.removeItem('notes');
     msg.textContent = '記録を全て削除しました。';
 });
 
