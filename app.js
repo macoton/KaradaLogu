@@ -95,9 +95,10 @@ function renderNotes() {
 }
 
 function renderOutput() {
-    const { temps, bps } = loadRecords();
+    const { temps, bps, notes } = loadRecords();
     const tbTemp = document.querySelector('#tblTemp tbody');
     const tbBP = document.querySelector('#tblBP tbody');
+    const tbNotes = document.querySelector('#tblNotes tbody');
     tbTemp.innerHTML = '';
     temps.forEach(r => {
         const tr = document.createElement('tr');
@@ -110,6 +111,14 @@ function renderOutput() {
         tr.innerHTML = `<td>${r.timestamp}</td><td>${r.sys}</td><td>${r.dia}</td><td>${r.pulse}</td>`;
         tbBP.appendChild(tr);
     });
+    if (tbNotes) {
+        tbNotes.innerHTML = '';
+        notes.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${r.timestamp}</td><td>${r.text}</td>`;
+            tbNotes.appendChild(tr);
+        });
+    }
 }
 
 // input handling
