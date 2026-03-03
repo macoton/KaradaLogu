@@ -150,9 +150,15 @@ function get6HourDateKey(isoTimestamp) {
 }
 
 function countToBar(count) {
-    // alternate between ─ and │
+    // for every 5 counts output 正
     let s = '';
-    for (let i = 0; i < count; i++) {
+    const fives = Math.floor(count / 5);
+    for (let i = 0; i < fives; i++) {
+        s += '正';
+    }
+    let rem = count % 5;
+    // remainder: alternate ─│ starting with ─
+    for (let i = 0; i < rem; i++) {
         s += (i % 2 === 0) ? '─' : '│';
     }
     return s || '0';
