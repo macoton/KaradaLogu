@@ -8,6 +8,9 @@ const sections = {
 function showSection(name) {
     Object.values(sections).forEach(sec => sec.classList.remove('active'));
     sections[name].classList.add('active');
+    if (name === 'input') {
+        renderNotes();
+    }
 }
 
 document.getElementById('btnInput').addEventListener('click', () => showSection('input'));
@@ -69,8 +72,30 @@ function addNoteRecord(text) {
     saveRecords({ temps, bps, notes });
 }
 
+// render notes buttons (used on input screen)
+function renderNotes() {
+    const { notes } = loadRecords();
+    const notesContainer = document.querySelector('#notesContainer');
+    if (!notesContainer) return;
+    notesContainer.innerHTML = '';
+    notes.forEach(r => {
+        const btn = document.createElement('button');
+        btn.textContent = r.text;
+        btn.addEventListener('click', () => {
+            addNoteRecord(r.text);
+            msg.textContent = `メモ "${r.text}" を記録しました。`;
+            renderNotes();
+        });
+        notesContainer.appendChild(btn);
+        const span = document.createElement('span');
+        span.textContent = ` ${r.timestamp}`;
+        notesContainer.appendChild(span);
+        notesContainer.appendChild(document.createElement('br'));
+    });
+}
+
 function renderOutput() {
-    const { temps, bps, notes } = loadRecords();
+    const { temps, bps } = loadRecords();
     const tbTemp = document.querySelector('#tblTemp tbody');
     const tbBP = document.querySelector('#tblBP tbody');
     tbTemp.innerHTML = '';
@@ -85,25 +110,6 @@ function renderOutput() {
         tr.innerHTML = `<td>${r.timestamp}</td><td>${r.sys}</td><td>${r.dia}</td><td>${r.pulse}</td>`;
         tbBP.appendChild(tr);
     });
-
-    // render notes as buttons with timestamp
-    const notesContainer = document.querySelector('#notesContainer');
-    if (notesContainer) {
-        notesContainer.innerHTML = '';
-        notes.forEach(r => {
-            const btn = document.createElement('button');
-            btn.textContent = r.text;
-            btn.addEventListener('click', () => {
-                addNoteRecord(r.text);
-                renderOutput();
-            });
-            notesContainer.appendChild(btn);
-            const span = document.createElement('span');
-            span.textContent = ` ${r.timestamp}`;
-            notesContainer.appendChild(span);
-            notesContainer.appendChild(document.createElement('br'));
-        });
-    }
 }
 
 // input handling
