@@ -215,13 +215,15 @@ function applyZoom() {
     document.body.style.setProperty('--zoom', zoomLevel);
 }
 function autoFitZoom() {
-    // scale body so that its scrollWidth fits viewport width
+    // scale body so that its scrollWidth (or title width) fits viewport width
     const bodyWidth = document.body.scrollWidth;
-    if (bodyWidth > 0) {
-        const target = window.innerWidth / bodyWidth;
-        zoomLevel = Math.min(Math.max(target, 0.5), 3);
-        applyZoom();
-    }
+    const title = document.querySelector('h1');
+    const titleWidth = title ? title.scrollWidth : 0;
+    const reference = Math.max(bodyWidth, titleWidth, 1);
+    const target = window.innerWidth / reference;
+    // allow scaling arbitrarily large so title fills width
+    zoomLevel = Math.max(target, 0.5);
+    applyZoom();
 }
 
 // automatically fit to width on load/resize
