@@ -19,10 +19,30 @@ document.getElementById('btnSettings').addEventListener('click', () => showSecti
 
 // storage helpers
 function loadRecords() {
-    const temps = JSON.parse(localStorage.getItem('temps') || '[]');
-    const bps = JSON.parse(localStorage.getItem('bps') || '[]');
-    const notes = JSON.parse(localStorage.getItem('notes') || '[]');
-    return { temps, bps, notes };
+    try {
+        // helper ensuring we always return an array even if stored data is corrupted
+        const safeParse = (key) => {
+            const raw = localStorage.getItem(key);
+            if (!raw) return [];
+            try {
+                const v = JSON.parse(raw);
+                return Array.isArray(v) ? v : [];
+            } catch {
+                // if JSON is invalid, reset the key and return empty array
+                localStorage.removeItem(key);
+                return [];
+            }
+        };
+
+        const temps = safeParse('temps');
+        const bps = safeParse('bps');
+        const notes = safeParse('notes');
+        return { temps, bps, notes };
+    } catch (err) {
+        console.error('loadRecords failed', err);
+        // in case localStorage access throws, fall back to empty sets
+        return { temps: [], bps: [], notes: [] };
+    }
 }
 
 function saveRecords({ temps, bps, notes }) {
