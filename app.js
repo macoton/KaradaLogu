@@ -192,27 +192,44 @@ function renderSummary() {
     notes.forEach(r => {
         const dateKey = get6HourDateKey(r.timestamp);
         const groupKey = `${dateKey}|${r.text}`;
-        notesByDateAndText.set(groupKey, (notesByDateAndText.get(groupKey) || 0) + 1);
+        const existing = notesByDateAndText.get(groupKey);
+        if (existing) {
+            existing.count += 1;
+            if (r.timestamp > existing.latest) existing.latest = r.timestamp;
+        } else {
+            notesByDateAndText.set(groupKey, { count: 1, latest: r.timestamp });
+        }
     });
     console.log('grouped notes', notesByDateAndText.size);
 
     const notesByDate = new Map();
-    notesByDateAndText.forEach((count, groupKey) => {
+    notesByDateAndText.forEach((v, groupKey) => {
         const [dateKey, text] = groupKey.split('|');
         if (!notesByDate.has(dateKey)) notesByDate.set(dateKey, []);
-        notesByDate.get(dateKey).push({ text, count });
+        notesByDate.get(dateKey).push({ text, count: v.count, latest: v.latest });
     });
 
     const tbSummaryNotes = document.querySelector('#tblSummaryNotes tbody');
     tbSummaryNotes.innerHTML = '';
     const sortedDates = Array.from(notesByDate.keys()).sort().reverse();
+    // helper to format elapsed
+    function elapsed(ts) {
+        const now = new Date();
+        const d = now - new Date(ts);
+        const sec = Math.floor(d/1000);
+        const h = Math.floor(sec/3600);
+        const m = Math.floor((sec%3600)/60);
+        const s = sec % 60;
+        return `${h}h${m}m${s}s前`;
+    }
     sortedDates.forEach(dateKey => {
         const entriesForDate = notesByDate.get(dateKey);
         entriesForDate.forEach((entry, idx) => {
             const tr = document.createElement('tr');
             const dateCell = idx === 0 ? dateKey : '';
             const bar = countToBar(entry.count);
-            tr.innerHTML = `<td>${dateCell}</td><td>${entry.text}</td><td>${bar}</td>`;
+            const rel = elapsed(entry.latest);
+            tr.innerHTML = `<td>${dateCell}</td><td>${entry.text}</td><td>${bar}</td><td>${rel}</td>`;
             tbSummaryNotes.appendChild(tr);
         });
     });
