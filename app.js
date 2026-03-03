@@ -181,6 +181,7 @@ function handleInput(e) {
     addNoteRecord(s);
     msg.textContent = `メモ "${s}" を記録しました。`;
     clearInput();
+    renderNotes();
 }
 
 // use Enter key instead of input event
