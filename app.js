@@ -221,8 +221,8 @@ function autoFitZoom() {
     const titleWidth = title ? title.scrollWidth : 0;
     const reference = Math.max(bodyWidth, titleWidth, 1);
     const target = window.innerWidth / reference;
-    // allow scaling arbitrarily large so title fills width
-    zoomLevel = Math.max(target, 0.5);
+    // limit zoom to no more than 2× for reasonable size
+    zoomLevel = Math.min(Math.max(target, 0.5), 2);
     applyZoom();
 }
 
