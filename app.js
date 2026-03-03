@@ -67,8 +67,24 @@ function clearInput() {
     txt.value = '';
 }
 
+// convert full-width digits to ASCII (half-width)
+function normalizeDigits(str) {
+    // full-width ０-９ are U+FF10 to U+FF19
+    return str.replace(/[０-９]/g, c =>
+        String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
+    );
+}
+
 function handleInput(e) {
-    const s = txt.value.trim();
+    // only process when enter key pressed
+    if (e && e.key && e.key !== 'Enter') {
+        return;
+    }
+
+    // get value and normalize
+    let s = txt.value.trim();
+    s = normalizeDigits(s);
+
     if (!/^[0-9]*$/.test(s)) {
         msg.textContent = '数字のみ入力してください。';
         return;
@@ -90,7 +106,9 @@ function handleInput(e) {
     }
 }
 
-txt.addEventListener('input', handleInput);
+// use Enter key instead of input event
+//txt.addEventListener('input', handleInput);
+txt.addEventListener('keydown', handleInput);
 
 // settings
 document.getElementById('btnClear').addEventListener('click', () => {
