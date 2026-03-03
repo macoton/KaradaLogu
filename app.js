@@ -32,9 +32,9 @@ function saveRecords({ temps, bps, notes }) {
 }
 
 function addTempRecord(value) {
-    const { temps, bps } = loadRecords();
+    const { temps, bps, notes } = loadRecords();
     temps.push({ timestamp: new Date().toISOString(), temp: value });
-    saveRecords({ temps, bps });
+    saveRecords({ temps, bps, notes });
 }
 
 function addBPRecord(sys, dia, pulse) {
@@ -50,7 +50,7 @@ function addNoteRecord(text) {
 }
 
 function renderOutput() {
-    const { temps, bps } = loadRecords();
+    const { temps, bps, notes } = loadRecords();
     const tbTemp = document.querySelector('#tblTemp tbody');
     const tbBP = document.querySelector('#tblBP tbody');
     tbTemp.innerHTML = '';
