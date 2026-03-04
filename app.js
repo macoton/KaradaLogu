@@ -379,7 +379,12 @@ function handleImportClick() {
     document.getElementById('fileInput').click();
 }
 
-let gapiInitialized = false;
+// --- Google Drive support (GIS) ---
+let isGoogleDriveAuthorized = false;
+let accessToken = null;
+let tokenClient = null;
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const EXPORT_FILENAME = 'karadalogu_export.json';
 
 function showDriveButtons(show) {
     const bExp = document.getElementById('btnDriveExport');
@@ -388,133 +393,161 @@ function showDriveButtons(show) {
     if (bImp) bImp.style.display = show ? '' : 'none';
 }
 
-function initGoogleDriveAuth() {
-    if (gapiInitialized) {
-        gapi.auth2.getAuthInstance().signIn().then(() => {
-            checkTokenAndNotify();
+// load CLIENT_ID/API_KEY then init GIS token client
+async function loadDriveConfig() {
+    try {
+        const [clientRes, apiRes] = await Promise.all([
+            fetch('./cgi-bin/clientid.cgi'),
+            fetch('./cgi-bin/apikey.cgi')
+        ]);
+        const clientId = clientRes.ok ? (await clientRes.text()).trim() : null;
+        const apiKey = apiRes.ok ? (await apiRes.text()).trim() : null;
+        if (clientId && apiKey) {
+            initGoogleAPI(clientId, apiKey);
+        }
+    } catch (err) {
+        console.error('Failed to load drive config:', err);
+    }
+}
+
+function initGoogleAPI(clientId, apiKey) {
+    if (window.google && google.accounts && google.accounts.oauth2) {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: SCOPES,
+            callback: tokenResponse => {
+                if (tokenResponse && tokenResponse.access_token) {
+                    accessToken = tokenResponse.access_token;
+                    isGoogleDriveAuthorized = true;
+                    showDriveButtons(true);
+                    console.log('Obtained access token', accessToken);
+                    alert('Google Drive 認証完了');
+                } else {
+                    console.error('Token response:', tokenResponse);
+                    alert('認証に失敗しました');
+                }
+            }
         });
+    } else {
+        console.error('GIS not loaded');
+    }
+}
+
+function authorizeGoogleDrive() {
+    if (!tokenClient) {
+        alert('Google API 初期化に失敗しました');
         return;
     }
-    Promise.all([
-        fetch('./cgi-bin/apikey.cgi').then(r => r.text()),
-        fetch('./cgi-bin/clientid.cgi').then(r => r.text())
-    ]).then(([apiKey, clientId]) => {
-        console.log('Got GDrive keys', apiKey, clientId);
-        const script = document.createElement('script');
-        script.src = 'https://apis.google.com/js/api.js';
-        script.onload = () => {
-            window.gapi.load('client:auth2', () => {
-                gapi.client.init({
-                    apiKey: apiKey.trim(),
-                    clientId: clientId.trim(),
-                    scope: 'https://www.googleapis.com/auth/drive.file'
-                }).then(() => {
-                    console.log('gapi initialized');
-                    gapiInitialized = true;
-                    gapi.auth2.getAuthInstance().signIn().then(() => {
-                        checkTokenAndNotify();
-                    });
-                });
-            });
-        };
-        document.body.appendChild(script);
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+}
+
+function saveToDrive() {
+    if (!isGoogleDriveAuthorized || !accessToken) {
+        alert('Google Driveに認証してください');
+        return;
+    }
+    const recs = loadRecords();
+    const content = JSON.stringify(recs);
+    const blob = new Blob([content], { type: 'application/json' });
+
+    const listUrl = `https://www.googleapis.com/drive/v3/files?spaces=drive.file&pageSize=10&fields=files(id,name)&q=${encodeURIComponent("name='" + EXPORT_FILENAME + "'")}`;
+    fetch(listUrl, { headers: { Authorization: 'Bearer ' + accessToken } })
+        .then(r => r.json())
+        .then(data => {
+            const files = data.files || [];
+            if (files.length > 0) {
+                updateDriveFile(files[0].id, blob);
+            } else {
+                createDriveFile(blob);
+            }
+        }).catch(err => {
+            console.error(err);
+            alert('Drive保存エラー');
+            isGoogleDriveAuthorized = false;
+            accessToken = null;
+            showDriveButtons(false);
+        });
+}
+
+function createDriveFile(fileBlob) {
+    const metadata = { name: EXPORT_FILENAME, mimeType: 'application/json' };
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+    form.append('file', fileBlob);
+    fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + accessToken },
+        body: form
+    }).then(res => {
+        if (res.ok) {
+            alert('Driveに保存しました');
+        } else {
+            return res.text().then(txt => { throw new Error(txt); });
+        }
     }).catch(err => {
-        alert('Google Driveのキー取得に失敗: ' + err);
+        console.error(err);
+        alert('Drive保存エラー');
+        isGoogleDriveAuthorized = false;
+        accessToken = null;
+        showDriveButtons(false);
     });
 }
 
-function checkTokenAndNotify() {
-    const authInstance = gapi.auth2.getAuthInstance();
-    if (!authInstance) {
-        console.error('Auth instance not available');
-        return;
-    }
-    const user = authInstance.currentUser.get();
-    if (user.isSignedIn()) {
-        const authResponse = user.getAuthResponse(true);
-        const accessToken = authResponse.id_token || authResponse.access_token;
-        console.log('Access Token:', accessToken);
-        console.log('Auth Response:', authResponse);
-        alert('Google Drive認証完了\nトークン: ' + accessToken.substring(0, 50) + '...');
-        showDriveButtons(true);
-    } else {
-        console.warn('User not signed in');
-        alert('サインインに失敗しました');
-    }
-}
-
-function ensureGapi(cb) {
-    if (!gapiInitialized) {
-        alert('まずGoogle Drive認証を実行してください');
-        return;
-    }
-    if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
-        gapi.auth2.getAuthInstance().signIn().then(() => { showDriveButtons(true); cb(); });
-    } else {
-        cb();
-    }
-}
-
-function getAccessToken() {
-    const authInstance = gapi.auth2.getAuthInstance();
-    if (!authInstance || !authInstance.currentUser.get().isSignedIn()) {
-        return null;
-    }
-    const authResponse = authInstance.currentUser.get().getAuthResponse(true);
-    return authResponse.access_token || authResponse.id_token;
-}
-
-function exportToDrive() {
-    ensureGapi(() => {
-        const recs = loadRecords();
-        const content = JSON.stringify(recs);
-        // search for existing file
-        gapi.client.drive.files.list({
-            q: "name='karadalogu_export.json' and mimeType='application/json' and trashed=false",
-            fields: 'files(id,name)'
-        }).then(resp => {
-            const files = resp.result.files;
-            if (files && files.length > 0) {
-                const id = files[0].id;
-                gapi.client.request({
-                    path: `/upload/drive/v3/files/${id}`,
-                    method: 'PATCH',
-                    params: { uploadType: 'media' },
-                    body: content
-                }).then(() => alert('Driveへエクスポート完了'));
-            } else {
-                gapi.client.drive.files.create({
-                    resource: { name: 'karadalogu_export.json', mimeType: 'application/json' },
-                    media: { mimeType: 'application/json', body: content }
-                }).then(() => alert('Driveへエクスポート完了'));
-            }
-        });
+function updateDriveFile(fileId, fileBlob) {
+    fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+        method: 'PATCH',
+        headers: { Authorization: 'Bearer ' + accessToken },
+        body: fileBlob
+    }).then(res => {
+        if (res.ok) {
+            alert('Driveに保存しました');
+        } else {
+            return res.text().then(txt => { throw new Error(txt); });
+        }
+    }).catch(err => {
+        console.error(err);
+        alert('Drive保存エラー');
+        isGoogleDriveAuthorized = false;
+        accessToken = null;
+        showDriveButtons(false);
     });
 }
 
-function importFromDrive() {
-    ensureGapi(() => {
-        gapi.client.drive.files.list({
-            q: "name='karadalogu_export.json' and mimeType='application/json' and trashed=false",
-            fields: 'files(id,name)'
-        }).then(resp => {
-            const files = resp.result.files;
-            if (files && files.length > 0) {
-                const id = files[0].id;
-                gapi.client.drive.files.get({ fileId: id, alt: 'media' }).then(res => {
-                    try {
-                        const obj = JSON.parse(res.body);
-                        processImportedObject(obj);
-                    } catch (e) {
-                        alert('Drive上のデータの解析に失敗: ' + e);
-                    }
+function loadFromDrive() {
+    if (!isGoogleDriveAuthorized || !accessToken) {
+        alert('Google Driveに認証してください');
+        return;
+    }
+    const listUrl = `https://www.googleapis.com/drive/v3/files?spaces=drive.file&pageSize=10&fields=files(id,name)&q=${encodeURIComponent("name='" + EXPORT_FILENAME + "'")}`;
+    fetch(listUrl, { headers: { Authorization: 'Bearer ' + accessToken } })
+        .then(r => r.json())
+        .then(data => {
+            const files = data.files || [];
+            if (files.length > 0) {
+                const fileId = files[0].id;
+                return fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+                    headers: { Authorization: 'Bearer ' + accessToken }
                 });
             } else {
-                alert('Drive上にエクスポートファイルが見つかりません');
+                throw new Error('ファイルがありません');
             }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('読み込みエラー');
+            return res.json();
+        })
+        .then(obj => {
+            processImportedObject(obj);
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Drive読み込みエラー');
+            isGoogleDriveAuthorized = false;
+            accessToken = null;
+            showDriveButtons(false);
         });
-    });
 }
+
 
 // settings button listeners
 const btnClearEl = document.getElementById('btnClear');
@@ -530,14 +563,16 @@ if (fileInputEl) fileInputEl.addEventListener('change', e => {
     }
 });
 const btnGDriveEl = document.getElementById('btnGDrive');
-if (btnGDriveEl) btnGDriveEl.addEventListener('click', initGoogleDriveAuth);
+if (btnGDriveEl) btnGDriveEl.addEventListener('click', authorizeGoogleDrive);
 const btnDriveExportEl = document.getElementById('btnDriveExport');
-if (btnDriveExportEl) btnDriveExportEl.addEventListener('click', exportToDrive);
+if (btnDriveExportEl) btnDriveExportEl.addEventListener('click', saveToDrive);
 const btnDriveImportEl = document.getElementById('btnDriveImport');
-if (btnDriveImportEl) btnDriveImportEl.addEventListener('click', importFromDrive);
+if (btnDriveImportEl) btnDriveImportEl.addEventListener('click', loadFromDrive);
 
 // start on input
 showSection('input');
+// load drive configuration for GIS
+loadDriveConfig();
 
 // zoom functionality
 let zoomLevel = 1;

@@ -19,8 +19,11 @@
   - 記録をJSON形式でエクスポート
   - JSONファイルからインポート（読み込み時に「破棄して上書き」「マージ」「キャンセル」を選択可能）
   - Google Drive機能
-    - 認証ボタンでGoogle API OAuth2を実行（APIキー/クライアントIDは `/cgi-bin/apikey.cgi` と `/cgi-bin/clientid.cgi` から取得）
-    - 認証後「Driveにエクスポート」「Driveから読み込み」ボタンが有効
+    - Google Identity Services（GIS）を利用したOAuth2トークン取得
+      - 認証ボタン押下でGISの `initTokenClient` を初期化し、アクセストークンを取得
+      - APIキー/クライアントIDは `/cgi-bin/apikey.cgi` と `/cgi-bin/clientid.cgi` から読み込み
+      - トークンは `accessToken` 変数に保持され、認証完了時にコンソールに出力される
+    - 認証後「Driveにエクスポート」「Driveから読み込み」ボタンが表示される
     - エクスポートでは既存ファイルを更新、なければ新規作成
     - 読み込みはDrive上の同名JSONファイルを取得し、同様に上書き・マージ・キャンセルを選択
 
