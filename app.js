@@ -513,7 +513,7 @@ function updateDriveFile(fileId, fileBlob) {
 
 // search for file in drive.file and appDataFolder spaces
 function queryDriveFile(name) {
-    const spacesList = ['drive.file', 'appDataFolder'];
+    const spacesList = ['drive', 'appDataFolder'];
     // build q string with additional filters
     const qstr = `name='${name}' and mimeType='application/json' and trashed=false`;
     function trySpace(space) {
