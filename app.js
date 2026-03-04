@@ -381,10 +381,18 @@ function handleImportClick() {
 
 let gapiInitialized = false;
 
+function showDriveButtons(show) {
+    const bExp = document.getElementById('btnDriveExport');
+    const bImp = document.getElementById('btnDriveImport');
+    if (bExp) bExp.style.display = show ? '' : 'none';
+    if (bImp) bImp.style.display = show ? '' : 'none';
+}
+
 function initGoogleDriveAuth() {
     if (gapiInitialized) {
         gapi.auth2.getAuthInstance().signIn().then(() => {
             alert('Google Drive認証済み');
+            showDriveButtons(true);
         });
         return;
     }
@@ -406,6 +414,7 @@ function initGoogleDriveAuth() {
                     gapiInitialized = true;
                     gapi.auth2.getAuthInstance().signIn().then(() => {
                         alert('Google Drive認証完了');
+                        showDriveButtons(true);
                     });
                 });
             });
@@ -422,7 +431,7 @@ function ensureGapi(cb) {
         return;
     }
     if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
-        gapi.auth2.getAuthInstance().signIn().then(cb);
+        gapi.auth2.getAuthInstance().signIn().then(() => { showDriveButtons(true); cb(); });
     } else {
         cb();
     }
