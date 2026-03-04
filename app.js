@@ -327,21 +327,47 @@ function exportJSON() {
     URL.revokeObjectURL(url);
 }
 
+// merge helper used by Drive import as well
+
+function processImportedObject(obj) {
+    if (!obj || typeof obj !== 'object') {
+        alert('読み込んだデータが正しくありません');
+        return;
+    }
+    const choice = prompt('読み込み方法を選択:\n1: 破棄して上書き\n2: 既存データとマージ\n3: キャンセル','1');
+    if (choice === '3' || choice === null) {
+        return;
+    }
+    const existing = loadRecords();
+    let result;
+    if (choice === '1') {
+        result = {
+            temps: obj.temps || [],
+            bps: obj.bps || [],
+            notes: obj.notes || []
+        };
+    } else if (choice === '2') {
+        result = {
+            temps: existing.temps.concat(obj.temps || []),
+            bps: existing.bps.concat(obj.bps || []),
+            notes: existing.notes.concat(obj.notes || [])
+        };
+    } else {
+        alert('無効な選択です');
+        return;
+    }
+    ['temps', 'bps', 'notes'].forEach(k => {
+        localStorage.setItem(k, JSON.stringify(result[k]));
+    });
+    alert('インポート完了');
+}
+
 function importJSON(file) {
     const reader = new FileReader();
     reader.onload = e => {
         try {
             const obj = JSON.parse(e.target.result);
-            if (obj && typeof obj === 'object') {
-                if (confirm('既存の記録を上書きしますか？')) {
-                    ['temps', 'bps', 'notes'].forEach(k => {
-                        localStorage.setItem(k, JSON.stringify(obj[k] || []));
-                    });
-                    alert('インポート完了');
-                }
-            } else {
-                alert('正しいJSONではありません');
-            }
+            processImportedObject(obj);
         } catch (err) {
             alert('読み込みに失敗: ' + err);
         }
@@ -353,7 +379,15 @@ function handleImportClick() {
     document.getElementById('fileInput').click();
 }
 
+let gapiInitialized = false;
+
 function initGoogleDriveAuth() {
+    if (gapiInitialized) {
+        gapi.auth2.getAuthInstance().signIn().then(() => {
+            alert('Google Drive認証済み');
+        });
+        return;
+    }
     Promise.all([
         fetch('/cgi-bin/apikey.cgi').then(r => r.text()),
         fetch('/cgi-bin/clientid.cgi').then(r => r.text())
@@ -369,6 +403,7 @@ function initGoogleDriveAuth() {
                     scope: 'https://www.googleapis.com/auth/drive.file'
                 }).then(() => {
                     console.log('gapi initialized');
+                    gapiInitialized = true;
                     gapi.auth2.getAuthInstance().signIn().then(() => {
                         alert('Google Drive認証完了');
                     });
@@ -378,6 +413,70 @@ function initGoogleDriveAuth() {
         document.body.appendChild(script);
     }).catch(err => {
         alert('Google Driveのキー取得に失敗: ' + err);
+    });
+}
+
+function ensureGapi(cb) {
+    if (!gapiInitialized) {
+        alert('まずGoogle Drive認証を実行してください');
+        return;
+    }
+    if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
+        gapi.auth2.getAuthInstance().signIn().then(cb);
+    } else {
+        cb();
+    }
+}
+
+function exportToDrive() {
+    ensureGapi(() => {
+        const recs = loadRecords();
+        const content = JSON.stringify(recs);
+        // search for existing file
+        gapi.client.drive.files.list({
+            q: "name='karadalogu_export.json' and mimeType='application/json' and trashed=false",
+            fields: 'files(id,name)'
+        }).then(resp => {
+            const files = resp.result.files;
+            if (files && files.length > 0) {
+                const id = files[0].id;
+                gapi.client.request({
+                    path: `/upload/drive/v3/files/${id}`,
+                    method: 'PATCH',
+                    params: { uploadType: 'media' },
+                    body: content
+                }).then(() => alert('Driveへエクスポート完了'));
+            } else {
+                gapi.client.drive.files.create({
+                    resource: { name: 'karadalogu_export.json', mimeType: 'application/json' },
+                    media: { mimeType: 'application/json', body: content }
+                }).then(() => alert('Driveへエクスポート完了'));
+            }
+        });
+    });
+}
+
+function importFromDrive() {
+    ensureGapi(() => {
+        gapi.client.drive.files.list({
+            q: "name='karadalogu_export.json' and mimeType='application/json' and trashed=false",
+            fields: 'files(id,name)'
+        }).then(resp => {
+            const files = resp.result.files;
+            if (files && files.length > 0) {
+                const id = files[0].id;
+                gapi.client.drive.files.get({ fileId: id, alt: 'media' }).then(res => {
+                    try {
+                        const obj = JSON.parse(res.body);
+                        processImportedObject(obj);
+                    } catch (e) {
+                        alert('Drive上のデータの解析に失敗: ' + e);
+                    }
+                });
+            } else {
+                alert('Drive上にエクスポートファイルが見つかりません');
+            }
+        });
     });
 }
 
@@ -396,6 +495,10 @@ if (fileInputEl) fileInputEl.addEventListener('change', e => {
 });
 const btnGDriveEl = document.getElementById('btnGDrive');
 if (btnGDriveEl) btnGDriveEl.addEventListener('click', initGoogleDriveAuth);
+const btnDriveExportEl = document.getElementById('btnDriveExport');
+if (btnDriveExportEl) btnDriveExportEl.addEventListener('click', exportToDrive);
+const btnDriveImportEl = document.getElementById('btnDriveImport');
+if (btnDriveImportEl) btnDriveImportEl.addEventListener('click', importFromDrive);
 
 // start on input
 showSection('input');
