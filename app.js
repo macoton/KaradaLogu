@@ -391,8 +391,7 @@ function showDriveButtons(show) {
 function initGoogleDriveAuth() {
     if (gapiInitialized) {
         gapi.auth2.getAuthInstance().signIn().then(() => {
-            alert('Google Drive認証済み');
-            showDriveButtons(true);
+            checkTokenAndNotify();
         });
         return;
     }
@@ -413,8 +412,7 @@ function initGoogleDriveAuth() {
                     console.log('gapi initialized');
                     gapiInitialized = true;
                     gapi.auth2.getAuthInstance().signIn().then(() => {
-                        alert('Google Drive認証完了');
-                        showDriveButtons(true);
+                        checkTokenAndNotify();
                     });
                 });
             });
@@ -423,6 +421,26 @@ function initGoogleDriveAuth() {
     }).catch(err => {
         alert('Google Driveのキー取得に失敗: ' + err);
     });
+}
+
+function checkTokenAndNotify() {
+    const authInstance = gapi.auth2.getAuthInstance();
+    if (!authInstance) {
+        console.error('Auth instance not available');
+        return;
+    }
+    const user = authInstance.currentUser.get();
+    if (user.isSignedIn()) {
+        const authResponse = user.getAuthResponse(true);
+        const accessToken = authResponse.id_token || authResponse.access_token;
+        console.log('Access Token:', accessToken);
+        console.log('Auth Response:', authResponse);
+        alert('Google Drive認証完了\nトークン: ' + accessToken.substring(0, 50) + '...');
+        showDriveButtons(true);
+    } else {
+        console.warn('User not signed in');
+        alert('サインインに失敗しました');
+    }
 }
 
 function ensureGapi(cb) {
@@ -435,6 +453,15 @@ function ensureGapi(cb) {
     } else {
         cb();
     }
+}
+
+function getAccessToken() {
+    const authInstance = gapi.auth2.getAuthInstance();
+    if (!authInstance || !authInstance.currentUser.get().isSignedIn()) {
+        return null;
+    }
+    const authResponse = authInstance.currentUser.get().getAuthResponse(true);
+    return authResponse.access_token || authResponse.id_token;
 }
 
 function exportToDrive() {
