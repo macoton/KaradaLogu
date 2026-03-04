@@ -450,23 +450,21 @@ function saveToDrive() {
     const content = JSON.stringify(recs);
     const blob = new Blob([content], { type: 'application/json' });
 
-    const listUrl = `https://www.googleapis.com/drive/v3/files?spaces=drive.file&pageSize=10&fields=files(id,name)&q=${encodeURIComponent("name='" + EXPORT_FILENAME + "'")}`;
-    fetch(listUrl, { headers: { Authorization: 'Bearer ' + accessToken } })
-        .then(r => r.json())
-        .then(data => {
-            const files = data.files || [];
-            if (files.length > 0) {
-                updateDriveFile(files[0].id, blob);
-            } else {
-                createDriveFile(blob);
-            }
-        }).catch(err => {
-            console.error(err);
-            alert('Drive保存エラー');
-            isGoogleDriveAuthorized = false;
-            accessToken = null;
-            showDriveButtons(false);
-        });
+    queryDriveFile(EXPORT_FILENAME).then(file => {
+        if (file) {
+            console.log('ファイル見つかった', file);
+            updateDriveFile(file.id, blob);
+        } else {
+            console.log('ファイルなし -> 作成');
+            createDriveFile(blob);
+        }
+    }).catch(err => {
+        console.error('saveToDrive query error', err);
+        alert('Drive保存エラー');
+        isGoogleDriveAuthorized = false;
+        accessToken = null;
+        showDriveButtons(false);
+    });
 }
 
 function createDriveFile(fileBlob) {
@@ -513,39 +511,55 @@ function updateDriveFile(fileId, fileBlob) {
     });
 }
 
+// search for file in drive.file and appDataFolder spaces
+function queryDriveFile(name) {
+    const spacesList = ['drive.file', 'appDataFolder'];
+    let tried = [];
+    function trySpace(space) {
+        const url = `https://www.googleapis.com/drive/v3/files?spaces=${space}&pageSize=10&fields=files(id,name)&q=${encodeURIComponent("name='"+name+"'")}`;
+        return fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } })
+            .then(r => r.json())
+            .then(data => {
+                console.log('queryDriveFile result', space, data);
+                const files = data.files || [];
+                if (files.length > 0) return files[0];
+                return null;
+            });
+    }
+    // sequentially try spaces
+    return trySpace(spacesList[0]).then(res => {
+        if (res) return res;
+        return trySpace(spacesList[1]);
+    });
+}
+
 function loadFromDrive() {
     if (!isGoogleDriveAuthorized || !accessToken) {
         alert('Google Driveに認証してください');
         return;
     }
-    const listUrl = `https://www.googleapis.com/drive/v3/files?spaces=drive.file&pageSize=10&fields=files(id,name)&q=${encodeURIComponent("name='" + EXPORT_FILENAME + "'")}`;
-    fetch(listUrl, { headers: { Authorization: 'Bearer ' + accessToken } })
-        .then(r => r.json())
-        .then(data => {
-            const files = data.files || [];
-            if (files.length > 0) {
-                const fileId = files[0].id;
-                return fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-                    headers: { Authorization: 'Bearer ' + accessToken }
-                });
-            } else {
-                throw new Error('ファイルがありません');
-            }
-        })
-        .then(res => {
-            if (!res.ok) throw new Error('読み込みエラー');
-            return res.json();
-        })
-        .then(obj => {
-            processImportedObject(obj);
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Drive読み込みエラー');
-            isGoogleDriveAuthorized = false;
-            accessToken = null;
-            showDriveButtons(false);
+    queryDriveFile(EXPORT_FILENAME).then(file => {
+        if (!file) {
+            alert('Drive上にファイルが見つかりません');
+            return;
+        }
+        console.log('読み込むファイル', file);
+        return fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
+            headers: { Authorization: 'Bearer ' + accessToken }
         });
+    }).then(res => {
+        if (!res) return;
+        if (!res.ok) throw new Error('読み込みエラー status='+res.status);
+        return res.json();
+    }).then(obj => {
+        if (obj) processImportedObject(obj);
+    }).catch(err => {
+        console.error('loadFromDrive error', err);
+        alert('Drive読み込みエラー');
+        isGoogleDriveAuthorized = false;
+        accessToken = null;
+        showDriveButtons(false);
+    });
 }
 
 
