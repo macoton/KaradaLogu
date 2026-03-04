@@ -397,8 +397,8 @@ function initGoogleDriveAuth() {
         return;
     }
     Promise.all([
-        fetch('/cgi-bin/apikey.cgi').then(r => r.text()),
-        fetch('/cgi-bin/clientid.cgi').then(r => r.text())
+        fetch('./cgi-bin/apikey.cgi').then(r => r.text()),
+        fetch('./cgi-bin/clientid.cgi').then(r => r.text())
     ]).then(([apiKey, clientId]) => {
         console.log('Got GDrive keys', apiKey, clientId);
         const script = document.createElement('script');
