@@ -514,22 +514,35 @@ function updateDriveFile(fileId, fileBlob) {
 // search for file in drive.file and appDataFolder spaces
 function queryDriveFile(name) {
     const spacesList = ['drive.file', 'appDataFolder'];
-    let tried = [];
+    // build q string with additional filters
+    const qstr = `name='${name}' and mimeType='application/json' and trashed=false`;
     function trySpace(space) {
-        const url = `https://www.googleapis.com/drive/v3/files?spaces=${space}&pageSize=10&fields=files(id,name)&q=${encodeURIComponent("name='"+name+"'")}`;
+        const url = `https://www.googleapis.com/drive/v3/files?spaces=${space}&pageSize=10&fields=files(id,name)&q=${encodeURIComponent(qstr)}`;
         return fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } })
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) {
+                    console.warn('queryDriveFile http status', r.status, r.statusText);
+                    return r.json().then(errData => { throw errData; });
+                }
+                return r.json();
+            })
             .then(data => {
                 console.log('queryDriveFile result', space, data);
+                if (data && data.error) {
+                    console.error('queryDriveFile API error', data.error);
+                    throw data.error;
+                }
                 const files = data.files || [];
-                if (files.length > 0) return files[0];
-                return null;
+                return files.length > 0 ? files[0] : null;
             });
     }
-    // sequentially try spaces
-    return trySpace(spacesList[0]).then(res => {
-        if (res) return res;
-        return trySpace(spacesList[1]);
+    // sequentially try spaces with error catch to continue
+    return trySpace(spacesList[0]).catch(err => {
+        console.warn('queryDriveFile space', spacesList[0], 'failed', err);
+        return trySpace(spacesList[1]).catch(err2 => {
+            console.warn('queryDriveFile space', spacesList[1], 'failed', err2);
+            return null;
+        });
     });
 }
 
