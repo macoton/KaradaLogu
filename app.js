@@ -401,6 +401,34 @@ function processImportedObject(obj) {
             return; // cancel
         }
     }
+    
+    // deduplicate and sort by timestamp
+    const deduplicateAndSort = (records) => {
+        if (!records || records.length === 0) return [];
+        const seen = new Set();
+        const unique = [];
+        records.forEach(r => {
+            if (!r.timestamp) return; // skip invalid
+            // create unique key based on timestamp and values
+            let key = r.timestamp;
+            if (r.temp !== undefined) key += `|${r.temp}`;
+            if (r.sys !== undefined) key += `|${r.sys}|${r.dia}|${r.pulse}`;
+            if (r.text !== undefined) key += `|${r.text}`;
+            
+            if (!seen.has(key)) {
+                seen.add(key);
+                unique.push(r);
+            }
+        });
+        // sort by timestamp ascending
+        unique.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        return unique;
+    };
+    
+    result.temps = deduplicateAndSort(result.temps);
+    result.bps = deduplicateAndSort(result.bps);
+    result.notes = deduplicateAndSort(result.notes);
+    
     ['temps', 'bps', 'notes'].forEach(k => {
         localStorage.setItem(k, JSON.stringify(result[k]));
     });
