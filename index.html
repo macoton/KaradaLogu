@@ -50,7 +50,7 @@
             <a href="#output-temp">↑体温</a> | <a href="#output-bp">血圧脈拍</a> | <a href="#output-notes">その他の記録</a>
         </div>
         <table id="tblTemp">
-            <thead><tr><th>日時</th><th>体温</th><th>操作</th></tr></thead>
+            <thead><tr><th>日時</th><th>体温</th></tr></thead>
             <tbody></tbody>
         </table>
         <div class="nav-links">
@@ -61,7 +61,7 @@
             <a href="#output-temp">体温</a> | <a href="#output-bp">↑血圧脈拍</a> | <a href="#output-notes">その他の記録</a>
         </div>
         <table id="tblBP">
-            <thead><tr><th>日時</th><th>最高血圧</th><th>最低血圧</th><th>脈拍</th><th>操作</th></tr></thead>
+            <thead><tr><th>日時</th><th>最高血圧</th><th>最低血圧</th><th>脈拍</th></tr></thead>
             <tbody></tbody>
         </table>
         <div class="nav-links">
@@ -72,7 +72,7 @@
             <a href="#output-temp">体温</a> | <a href="#output-bp">血圧脈拍</a> | <a href="#output-notes">↑その他の記録</a>
         </div>
         <table id="tblNotes">
-            <thead><tr><th>日時</th><th>内容</th><th>操作</th></tr></thead>
+            <thead><tr><th>日時</th><th>内容</th></tr></thead>
             <tbody></tbody>
         </table>
         <div class="nav-links">
@@ -126,7 +126,7 @@
             <a href="#summary-temp">体温</a> | <a href="#summary-bp">血圧脈拍</a> | <a href="#summary-notes">↑その他の記録</a>
         </div>
         <table id="tblSummaryNotes">
-            <thead><tr><th>日付</th><th>内容</th><th>出現回数</th></tr></thead>
+            <thead><tr><th>日付</th></tr></thead>
             <tbody></tbody>
         </table>
         <div class="nav-links">
@@ -138,6 +138,17 @@
     </section>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        // Navigation link handlers
+        document.querySelectorAll('.nav-links a[href^="#section-"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const sectionId = this.getAttribute('href').substring(1);
+                const sectionName = sectionId.replace('section-', '');
+                showSection(sectionName);
+            });
+        });
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
