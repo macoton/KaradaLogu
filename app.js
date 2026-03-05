@@ -143,10 +143,37 @@ function renderOutput() {
 }
 
 // summary helpers and renderer
+// Get date key for summary (6 a.m. boundary using local time)
+// Returns YYYY-MM-DD in LOCAL time, not UTC
 function get6HourDateKey(isoTimestamp) {
     const d = new Date(isoTimestamp);
-    if (d.getHours() < 6) d.setDate(d.getDate() - 1);
-    return d.toISOString().split('T')[0];
+    const localHour = d.getHours();
+    let year = d.getFullYear();
+    let month = d.getMonth();
+    let date = d.getDate();
+    
+    if (localHour < 6) {
+        date--;  // Go back one day in local time
+    }
+    
+    // Check for month/year boundary
+    if (date <= 0) {
+        month--;
+        if (month < 0) {
+            year--;
+            month = 11;
+        }
+        // Get last date of previous month
+        const lastDayPrev = new Date(year, month + 1, 0).getDate();
+        date = lastDayPrev;
+    }
+    
+    // Format as YYYY-MM-DD using local values
+    const monthStr = String(month + 1).padStart(2, '0');
+    const dateStr = String(date).padStart(2, '0');
+    const result = `${year}-${monthStr}-${dateStr}`;
+    console.log('get6HourDateKey', isoTimestamp, 'localHour=', localHour, 'result=', result);
+    return result;
 }
 
 function countToBar(count) {
