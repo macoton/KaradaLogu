@@ -471,6 +471,30 @@ function maybeAutoSync() {
 function autoSyncDrive() {
     // fetch remote data and merge silently
     if (!accessToken) return;
+    
+    // helper to deduplicate and sort
+    const deduplicateAndSort = (records) => {
+        if (!records || records.length === 0) return [];
+        const seen = new Set();
+        const unique = [];
+        records.forEach(r => {
+            if (!r.timestamp) return; // skip invalid
+            // create unique key based on timestamp and values
+            let key = r.timestamp;
+            if (r.temp !== undefined) key += `|${r.temp}`;
+            if (r.sys !== undefined) key += `|${r.sys}|${r.dia}|${r.pulse}`;
+            if (r.text !== undefined) key += `|${r.text}`;
+            
+            if (!seen.has(key)) {
+                seen.add(key);
+                unique.push(r);
+            }
+        });
+        // sort by timestamp ascending
+        unique.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        return unique;
+    };
+    
     queryDriveFile(EXPORT_FILENAME).then(file => {
         if (!file) {
             // nothing to merge, just export local
@@ -484,9 +508,9 @@ function autoSyncDrive() {
         }).then(remote => {
             const existing = loadRecords();
             const merged = {
-                temps: existing.temps.concat(remote.temps || []),
-                bps: existing.bps.concat(remote.bps || []),
-                notes: existing.notes.concat(remote.notes || [])
+                temps: deduplicateAndSort(existing.temps.concat(remote.temps || [])),
+                bps: deduplicateAndSort(existing.bps.concat(remote.bps || [])),
+                notes: deduplicateAndSort(existing.notes.concat(remote.notes || []))
             };
             saveRecords(merged);
             return saveToDrive();
@@ -712,6 +736,10 @@ if (btnAutoSyncEl) {
     btnAutoSyncEl.addEventListener('click', () => {
         autoSync = !autoSync;
         btnAutoSyncEl.textContent = `自動同期: ${autoSync ? 'オン' : 'オフ'}`;
+        // if turning on, immediately sync
+        if (autoSync) {
+            autoSyncDrive();
+        }
     });
 }
 
