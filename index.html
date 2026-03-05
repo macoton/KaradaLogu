@@ -17,6 +17,8 @@
         input, p#msg { font-size: inherit; }
         #notesContainer { max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; }
         #notesContainer button { font-size: inherit; margin: 8px; padding: 16px 24px; }
+        .nav-links { margin: 10px 0; font-size: 0.8em; }
+        .nav-links a { margin: 0 5px; text-decoration: none; color: blue; }
     </style>
 </head>
 <body>
@@ -40,21 +42,39 @@
 
     <section id="section-output">
         <h2>出力</h2>
-        <h3>体温</h3>
+        <h3 id="output-temp">体温</h3>
+        <div class="nav-links">
+            <a href="#output-temp">↑体温</a> | <a href="#output-bp">血圧脈拍</a> | <a href="#output-notes">その他の記録</a>
+        </div>
         <table id="tblTemp">
-            <thead><tr><th>日時</th><th>体温</th></tr></thead>
+            <thead><tr><th>日時</th><th>体温</th><th>操作</th></tr></thead>
             <tbody></tbody>
         </table>
-        <h3>血圧・脈拍</h3>
+        <div class="nav-links">
+            <a href="#output-temp">↑体温</a> | <a href="#output-bp">血圧脈拍</a> | <a href="#output-notes">その他の記録</a>
+        </div>
+        <h3 id="output-bp">血圧・脈拍</h3>
+        <div class="nav-links">
+            <a href="#output-temp">体温</a> | <a href="#output-bp">↑血圧脈拍</a> | <a href="#output-notes">その他の記録</a>
+        </div>
         <table id="tblBP">
-            <thead><tr><th>日時</th><th>最高血圧</th><th>最低血圧</th><th>脈拍</th></tr></thead>
+            <thead><tr><th>日時</th><th>最高血圧</th><th>最低血圧</th><th>脈拍</th><th>操作</th></tr></thead>
             <tbody></tbody>
         </table>
-        <h3>その他の記録</h3>
+        <div class="nav-links">
+            <a href="#output-temp">体温</a> | <a href="#output-bp">↑血圧脈拍</a> | <a href="#output-notes">その他の記録</a>
+        </div>
+        <h3 id="output-notes">その他の記録</h3>
+        <div class="nav-links">
+            <a href="#output-temp">体温</a> | <a href="#output-bp">血圧脈拍</a> | <a href="#output-notes">↑その他の記録</a>
+        </div>
         <table id="tblNotes">
-            <thead><tr><th>日時</th><th>内容</th></tr></thead>
+            <thead><tr><th>日時</th><th>内容</th><th>操作</th></tr></thead>
             <tbody></tbody>
         </table>
+        <div class="nav-links">
+            <a href="#output-temp">体温</a> | <a href="#output-bp">血圧脈拍</a> | <a href="#output-notes">↑その他の記録</a>
+        </div>
     </section>
 
     <section id="section-settings">
@@ -70,21 +90,39 @@
 
     <section id="section-summary">
         <h2>まとめ</h2>
-        <h3>体温</h3>
+        <h3 id="summary-temp">体温</h3>
+        <div class="nav-links">
+            <a href="#summary-temp">↑体温</a> | <a href="#summary-bp">血圧脈拍</a> | <a href="#summary-notes">その他の記録</a>
+        </div>
         <table id="tblSummaryTemp">
             <thead><tr><th>日時</th><th>体温</th></tr></thead>
             <tbody></tbody>
         </table>
-        <h3>血圧・脈拍</h3>
+        <div class="nav-links">
+            <a href="#summary-temp">↑体温</a> | <a href="#summary-bp">血圧脈拍</a> | <a href="#summary-notes">その他の記録</a>
+        </div>
+        <h3 id="summary-bp">血圧・脈拍</h3>
+        <div class="nav-links">
+            <a href="#summary-temp">体温</a> | <a href="#summary-bp">↑血圧脈拍</a> | <a href="#summary-notes">その他の記録</a>
+        </div>
         <table id="tblSummaryBP">
             <thead><tr><th>日時</th><th>最高血圧</th><th>最低血圧</th><th>脈拍</th></tr></thead>
             <tbody></tbody>
         </table>
-        <h3>その他の記録内容（内容ごとの出現回数）</h3>
+        <div class="nav-links">
+            <a href="#summary-temp">体温</a> | <a href="#summary-bp">↑血圧脈拍</a> | <a href="#summary-notes">その他の記録</a>
+        </div>
+        <h3 id="summary-notes">その他の記録内容（内容ごとの出現回数）</h3>
+        <div class="nav-links">
+            <a href="#summary-temp">体温</a> | <a href="#summary-bp">血圧脈拍</a> | <a href="#summary-notes">↑その他の記録</a>
+        </div>
         <table id="tblSummaryNotes">
             <thead><tr><th>日付</th><th>内容</th><th>出現回数</th><th>最新経過</th></tr></thead>
             <tbody></tbody>
         </table>
+        <div class="nav-links">
+            <a href="#summary-temp">体温</a> | <a href="#summary-bp">血圧脈拍</a> | <a href="#summary-notes">↑その他の記録</a>
+        </div>
     </section>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>

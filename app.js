@@ -215,19 +215,20 @@ function renderSummary() {
     });
     console.log('rendered bps', bps.length);
 
-    // restructure data by content then date
-    const contentMap = new Map();
+    // restructure data by date then content
+    const dateMap = new Map();
+    const allContents = new Set();
     notes.forEach(r => {
         const dateKey = get6HourDateKey(r.timestamp);
         const text = r.text;
-        if (!contentMap.has(text)) contentMap.set(text, new Map());
-        const dateMap = contentMap.get(text);
-        if (!dateMap.has(dateKey)) {
-            dateMap.set(dateKey, { count: 0, latest: r.timestamp });
-        }
-        const rec = dateMap.get(dateKey);
-        rec.count += 1;
-        if (r.timestamp > rec.latest) rec.latest = r.timestamp;
+        allContents.add(text);
+        if (!dateMap.has(dateKey)) dateMap.set(dateKey, { contents: new Map(), latest: r.timestamp });
+        const dayRec = dateMap.get(dateKey);
+        if (!dayRec.contents.has(text)) dayRec.contents.set(text, { count: 0, latest: r.timestamp });
+        const contentRec = dayRec.contents.get(text);
+        contentRec.count += 1;
+        if (r.timestamp > contentRec.latest) contentRec.latest = r.timestamp;
+        if (r.timestamp > dayRec.latest) dayRec.latest = r.timestamp;
     });
 
     const tbSummaryNotes = document.querySelector('#tblSummaryNotes tbody');
@@ -243,27 +244,30 @@ function renderSummary() {
         return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}前`;
     }
 
-    // iterate each content group
-    contentMap.forEach((dateMap, text) => {
-        // header row for content
-        const hr = document.createElement('tr');
-        hr.innerHTML = `<td colspan="4">${text}</td>`;
-        tbSummaryNotes.appendChild(hr);
-        // sorted date keys
-        const dates = Array.from(dateMap.keys()).sort().reverse();
-        let latestTime = 0;
-        dates.forEach(dateKey => {
-            const rec = dateMap.get(dateKey);
-            const bar = countToBar(rec.count);
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${dateKey}</td><td></td><td>${bar}</td><td></td>`;
-            tbSummaryNotes.appendChild(tr);
-            if (new Date(rec.latest) > latestTime) latestTime = new Date(rec.latest);
+    // sort dates ascending
+    const sortedDates = Array.from(dateMap.keys()).sort();
+    const sortedContents = Array.from(allContents).sort();
+
+    // build header
+    const thead = document.querySelector('#tblSummaryNotes thead tr');
+    thead.innerHTML = '<th>日付</th>';
+    sortedContents.forEach(content => {
+        thead.innerHTML += `<th>${content}</th>`;
+    });
+    thead.innerHTML += '<th>最新経過</th>';
+
+    // build rows
+    sortedDates.forEach(dateKey => {
+        const dayRec = dateMap.get(dateKey);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${dateKey}</td>`;
+        sortedContents.forEach(content => {
+            const contentRec = dayRec.contents.get(content);
+            const bar = contentRec ? countToBar(contentRec.count) : '';
+            tr.innerHTML += `<td>${bar}</td>`;
         });
-        // footer elapsed row
-        const fr = document.createElement('tr');
-        fr.innerHTML = `<td colspan="3">最新経過</td><td>${elapsed(latestTime)}</td>`;
-        tbSummaryNotes.appendChild(fr);
+        tr.innerHTML += `<td>${elapsed(dayRec.latest)}</td>`;
+        tbSummaryNotes.appendChild(tr);
     });
 }
 
