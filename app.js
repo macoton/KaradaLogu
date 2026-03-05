@@ -271,7 +271,9 @@ function renderSummary() {
     });
 
     // add footer row with latest elapsed time
+    console.log('overallLatest', overallLatest, 'sortedContents.length', sortedContents.length);
     if (overallLatest > 0) {
+        console.log('adding footer');
         const fr = document.createElement('tr');
         fr.innerHTML = `<td colspan="${1 + sortedContents.length}">最新経過: ${elapsed(overallLatest)}</td>`;
         tbSummaryNotes.appendChild(fr);
