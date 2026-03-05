@@ -218,7 +218,7 @@ function renderSummary() {
     // restructure data by date then content
     const dateMap = new Map();
     const allContents = new Set();
-    let overallLatest = '';
+    const contentLatests = new Map();
     notes.forEach(r => {
         const dateKey = get6HourDateKey(r.timestamp);
         const text = r.text;
@@ -230,7 +230,8 @@ function renderSummary() {
         contentRec.count += 1;
         if (r.timestamp > contentRec.latest) contentRec.latest = r.timestamp;
         if (r.timestamp > dayRec.latest) dayRec.latest = r.timestamp;
-        if (r.timestamp && r.timestamp > overallLatest) overallLatest = r.timestamp;
+        if (!contentLatests.has(text)) contentLatests.set(text, r.timestamp);
+        if (r.timestamp > contentLatests.get(text)) contentLatests.set(text, r.timestamp);
     });
 
     const tbSummaryNotes = document.querySelector('#tblSummaryNotes tbody');
@@ -270,14 +271,15 @@ function renderSummary() {
         tbSummaryNotes.appendChild(tr);
     });
 
-    // add footer row with latest elapsed time
-    console.log('overallLatest', overallLatest, 'sortedContents.length', sortedContents.length);
-    if (overallLatest) {
-        console.log('adding footer');
-        const fr = document.createElement('tr');
-        fr.innerHTML = `<td colspan="${1 + sortedContents.length}">最新経過: ${elapsed(overallLatest)}</td>`;
-        tbSummaryNotes.appendChild(fr);
-    }
+    // add footer row with latest elapsed time for each content
+    const fr = document.createElement('tr');
+    fr.innerHTML = '<td>最新経過</td>';
+    sortedContents.forEach(content => {
+        const latest = contentLatests.get(content);
+        const elapsedStr = latest ? elapsed(latest) : '';
+        fr.innerHTML += `<td>${elapsedStr}</td>`;
+    });
+    tbSummaryNotes.appendChild(fr);
 }
 
 
