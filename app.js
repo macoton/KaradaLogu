@@ -66,18 +66,21 @@ function addTempRecord(value) {
     const { temps, bps, notes } = loadRecords();
     temps.push({ timestamp: new Date().toISOString(), temp: value });
     saveRecords({ temps, bps, notes });
-}
+    maybeAutoSync();
+} 
 
 function addBPRecord(sys, dia, pulse) {
     const { temps, bps, notes } = loadRecords();
     bps.push({ timestamp: new Date().toISOString(), sys, dia, pulse });
     saveRecords({ temps, bps, notes });
-}
+    maybeAutoSync();
+} 
 
 function addNoteRecord(text) {
     const { temps, bps, notes } = loadRecords();
     notes.push({ timestamp: new Date().toISOString(), text });
     saveRecords({ temps, bps, notes });
+    maybeAutoSync();
 }
 
 // render notes buttons (used on input screen)
@@ -376,33 +379,33 @@ function processImportedObject(obj) {
         alert('読み込んだデータが正しくありません');
         return;
     }
-    const choice = prompt('読み込み方法を選択:\n1: 破棄して上書き\n2: 既存データとマージ\n3: キャンセル','1');
-    if (choice === '3' || choice === null) {
-        return;
-    }
-    const existing = loadRecords();
+    // use confirm dialogs so user can click buttons instead of typing
     let result;
-    if (choice === '1') {
+    if (confirm('読み込み: OK=破棄して上書き、キャンセル=マージまたは中止')) {
+        // overwrite
         result = {
             temps: obj.temps || [],
             bps: obj.bps || [],
             notes: obj.notes || []
         };
-    } else if (choice === '2') {
-        result = {
-            temps: existing.temps.concat(obj.temps || []),
-            bps: existing.bps.concat(obj.bps || []),
-            notes: existing.notes.concat(obj.notes || [])
-        };
     } else {
-        alert('無効な選択です');
-        return;
+        // ask if user really wants to merge or cancel
+        if (confirm('マージしますか？OK=マージ、キャンセル=中止')) {
+            const existing = loadRecords();
+            result = {
+                temps: existing.temps.concat(obj.temps || []),
+                bps: existing.bps.concat(obj.bps || []),
+                notes: existing.notes.concat(obj.notes || [])
+            };
+        } else {
+            return; // cancel
+        }
     }
     ['temps', 'bps', 'notes'].forEach(k => {
         localStorage.setItem(k, JSON.stringify(result[k]));
     });
     alert('インポート完了');
-}
+} 
 
 function importJSON(file) {
     const reader = new FileReader();
@@ -428,12 +431,51 @@ let tokenClient = null;
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const EXPORT_FILENAME = 'karadalogu_export.json';
 
+// auto sync state
+let autoSync = false;
+
+function maybeAutoSync() {
+    if (autoSync && isGoogleDriveAuthorized) {
+        autoSyncDrive();
+    }
+}
+
+function autoSyncDrive() {
+    // fetch remote data and merge silently
+    if (!accessToken) return;
+    queryDriveFile(EXPORT_FILENAME).then(file => {
+        if (!file) {
+            // nothing to merge, just export local
+            return saveToDrive();
+        }
+        return fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
+            headers: { Authorization: 'Bearer ' + accessToken }
+        }).then(res => {
+            if (!res.ok) throw new Error('fetch remote failed');
+            return res.json();
+        }).then(remote => {
+            const existing = loadRecords();
+            const merged = {
+                temps: existing.temps.concat(remote.temps || []),
+                bps: existing.bps.concat(remote.bps || []),
+                notes: existing.notes.concat(remote.notes || [])
+            };
+            saveRecords(merged);
+            return saveToDrive();
+        });
+    }).catch(err => {
+        console.error('autoSync error', err);
+    });
+}
+
 function showDriveButtons(show) {
     const bExp = document.getElementById('btnDriveExport');
     const bImp = document.getElementById('btnDriveImport');
+    const bAuto = document.getElementById('btnAutoSync');
     if (bExp) bExp.style.display = show ? '' : 'none';
     if (bImp) bImp.style.display = show ? '' : 'none';
-}
+    if (bAuto) bAuto.style.display = show ? '' : 'none';
+} 
 
 // load CLIENT_ID/API_KEY then init GIS token client
 async function loadDriveConfig() {
@@ -637,6 +679,13 @@ const btnDriveExportEl = document.getElementById('btnDriveExport');
 if (btnDriveExportEl) btnDriveExportEl.addEventListener('click', saveToDrive);
 const btnDriveImportEl = document.getElementById('btnDriveImport');
 if (btnDriveImportEl) btnDriveImportEl.addEventListener('click', loadFromDrive);
+const btnAutoSyncEl = document.getElementById('btnAutoSync');
+if (btnAutoSyncEl) {
+    btnAutoSyncEl.addEventListener('click', () => {
+        autoSync = !autoSync;
+        btnAutoSyncEl.textContent = `自動同期: ${autoSync ? 'オン' : 'オフ'}`;
+    });
+}
 
 // start on input
 showSection('input');

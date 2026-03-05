@@ -9,6 +9,8 @@
         nav button { margin-right: 10px; }
         /* make all buttons and inputs large and easy to tap */
         button { font-size: 2.5em; padding: 12px 18px; }
+        /* settings buttons can be smaller */
+        #section-settings button { font-size: 1em; padding: 6px 8px; }
         input { font-size: 2.2em; padding: 8px 12px; }
         section { display: none; font-size: 4em; }
         section.active { display: block; width: 90vw; max-width: 1000px; }
@@ -43,7 +45,8 @@
     <section id="section-output">
         <h2>出力</h2>
         <div class="nav-links">
-            <a href="#section-output">↑画面先頭</a> | <a href="#output-temp">体温</a> | <a href="#output-bp">血圧脈拍</a> | <a href="#output-notes">その他の記録</a>
+            <a href="#section-output">↑画面先頭</a> | <a href="#output-temp">体温</a> | <a href="#output-bp">血圧脈拍</a> | <a href="#output-notes">その他の記録</a> |
+            <button onclick="location.href='#output-end'">↓画面末尾</button>
         </div>
         <h3 id="output-temp">体温</h3>
         <div class="nav-links">
@@ -83,16 +86,18 @@
         <button id="btnGDrive">Google Drive認証</button>
         <button id="btnDriveExport" style="display:none">Driveにエクスポート</button>
         <button id="btnDriveImport" style="display:none">Driveから読み込み</button>
+        <button id="btnAutoSync" style="display:none">自動同期: オフ</button>
     </section>
 
     <section id="section-summary">
         <h2>まとめ</h2>
         <div class="nav-links">
-            <a href="#section-summary">↑画面先頭</a> | <a href="#summary-temp">体温</a> | <a href="#summary-bp">血圧脈拍</a> | <a href="#summary-notes">その他の記録</a>
+            <a href="#section-summary">↑画面先頭</a> | <a href="#summary-temp">体温</a> | <a href="#summary-bp">血圧脈拍</a> | <a href="#summary-notes">その他の記録</a> |
+            <button onclick="location.href='#summary-end'">↓画面末尾</button>
         </div>
         <h3 id="summary-temp">体温</h3>
         <div class="nav-links">
-            <a href="#summary-temp">↑体温</a> | <a href="#summary-bp">血圧脈拍</a> | <a href="#summary-notes">その他の記録</a>
+            <a href="#section-summary">↑画面先頭</a> | <a href="#summary-temp">体温</a> | <a href="#summary-bp">血圧脈拍</a> | <a href="#summary-notes">↑その他の記録</a>
         </div>
         <table id="tblSummaryTemp">
             <thead><tr><th>日時</th><th>体温</th></tr></thead>
@@ -115,9 +120,9 @@
             <tbody></tbody>
         </table>
         <div class="nav-links">
-
-            <a href="#summary-temp">体温</a> | <a href="#summary-bp">血圧脈拍</a> | <a href="#summary-notes">その他の記録</a>
+            <a href="#section-summary">↑画面先頭</a> | <a href="#summary-temp">体温</a> | <a href="#summary-bp">血圧脈拍</a> | <a href="#summary-notes">その他の記録</a>
         </div>
+        <div id="summary-end"></div>
     </section>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
