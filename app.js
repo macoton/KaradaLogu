@@ -462,11 +462,22 @@ const EXPORT_FILENAME = 'karadalogu_export.json';
 // auto sync state
 let autoSync = false;
 
+function setAutoSync(on) {
+    autoSync = on;
+    localStorage.setItem('autoSync', on ? '1' : '0');
+    const btn = document.getElementById('btnAutoSync');
+    if (btn) btn.textContent = `自動同期: ${autoSync ? 'オン' : 'オフ'}`;
+}
+
 function maybeAutoSync() {
     if (autoSync && isGoogleDriveAuthorized) {
         autoSyncDrive();
     }
 }
+
+// load saved autoSync preference
+const saved = localStorage.getItem('autoSync');
+if (saved === '1') autoSync = true; else autoSync = false;
 
 function autoSyncDrive() {
     // fetch remote data and merge silently
@@ -558,6 +569,10 @@ function initGoogleAPI(clientId, apiKey) {
                     showDriveButtons(true);
                     console.log('Obtained access token', accessToken);
                     alert('Google Drive 認証完了');
+                    // if auto sync was enabled, perform immediately
+                    if (autoSync) {
+                        autoSyncDrive();
+                    }
                 } else {
                     console.error('Token response:', tokenResponse);
                     alert('認証に失敗しました');
@@ -733,11 +748,11 @@ const btnDriveImportEl = document.getElementById('btnDriveImport');
 if (btnDriveImportEl) btnDriveImportEl.addEventListener('click', loadFromDrive);
 const btnAutoSyncEl = document.getElementById('btnAutoSync');
 if (btnAutoSyncEl) {
+    // initialize label
+    btnAutoSyncEl.textContent = `自動同期: ${autoSync ? 'オン' : 'オフ'}`;
     btnAutoSyncEl.addEventListener('click', () => {
-        autoSync = !autoSync;
-        btnAutoSyncEl.textContent = `自動同期: ${autoSync ? 'オン' : 'オフ'}`;
-        // if turning on, immediately sync
-        if (autoSync) {
+        setAutoSync(!autoSync);
+        if (autoSync && isGoogleDriveAuthorized) {
             autoSyncDrive();
         }
     });
@@ -768,3 +783,21 @@ function autoFitZoom() {
 // automatically fit to width on load/resize
 window.addEventListener('resize', autoFitZoom);
 autoFitZoom();
+
+// make internal anchors work reliably under scaling and handle showSection
+document.body.addEventListener('click', e => {
+    const a = e.target.closest('a');
+    if (!a) return;
+    const href = a.getAttribute('href');
+    if (!href || !href.startsWith('#')) return;
+    const id = href.substring(1);
+    const el = document.getElementById(id);
+    if (el) {
+        e.preventDefault();
+        // if it's a section id, switch section as well
+        if (id.startsWith('section-')) {
+            showSection(id.replace('section-', ''));
+        }
+        el.scrollIntoView({ behavior: 'smooth' });
+    }
+});
