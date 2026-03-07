@@ -540,9 +540,16 @@ function showDriveButtons(show) {
     const bExp = document.getElementById('btnDriveExport');
     const bImp = document.getElementById('btnDriveImport');
     const bAuto = document.getElementById('btnAutoSync');
+    const gbtn = document.getElementById('btnGDrive');
     if (bExp) bExp.style.display = show ? '' : 'none';
     if (bImp) bImp.style.display = show ? '' : 'none';
     if (bAuto) bAuto.style.display = show ? '' : 'none';
+    if (gbtn) {
+        if (!show) {
+            gbtn.classList.remove('active');
+            gbtn.textContent = 'Google Drive認証';
+        }
+    }
 } 
 
 // load CLIENT_ID/API_KEY then init GIS token client
@@ -574,6 +581,11 @@ function initGoogleAPI(clientId, apiKey) {
                     showDriveButtons(true);
                     console.log('Obtained access token', accessToken);
                     alert('Google Drive 認証完了');
+                    const gbtn = document.getElementById('btnGDrive');
+                    if (gbtn) {
+                        gbtn.classList.add('active');
+                        gbtn.textContent = 'Drive認証済み';
+                    }
                     // if auto sync was enabled, perform immediately
                     if (autoSync) {
                         autoSyncDrive();
@@ -800,8 +812,15 @@ document.body.addEventListener('click', e => {
     if (el) {
         e.preventDefault();
         // if it's a section id, switch section as well
+        // switch section if necessary
         if (id.startsWith('section-')) {
             showSection(id.replace('section-', ''));
+        } else if (id.startsWith('output-')) {
+            showSection('output');
+        } else if (id.startsWith('summary-')) {
+            showSection('summary');
+        } else if (id.startsWith('input-')) {
+            showSection('input');
         }
         // account for scale transform
         const scale = parseFloat(getComputedStyle(document.body).getPropertyValue('--zoom') || 1);
