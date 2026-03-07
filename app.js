@@ -10,6 +10,11 @@ function showSection(name) {
     console.log('showSection', name);
     Object.values(sections).forEach(sec => sec.classList.remove('active'));
     sections[name].classList.add('active');
+    // highlight nav button
+    document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+    const btnId = 'btn' + name.charAt(0).toUpperCase() + name.slice(1);
+    const btn = document.getElementById(btnId);
+    if (btn) btn.classList.add('active');
     if (name === 'input') {
         renderNotes();
     } else if (name === 'output') {
@@ -798,6 +803,10 @@ document.body.addEventListener('click', e => {
         if (id.startsWith('section-')) {
             showSection(id.replace('section-', ''));
         }
-        el.scrollIntoView({ behavior: 'smooth' });
+        // account for scale transform
+        const scale = parseFloat(getComputedStyle(document.body).getPropertyValue('--zoom') || 1);
+        const rect = el.getBoundingClientRect();
+        const offsetTop = window.pageYOffset + rect.top / scale;
+        window.scrollTo({ top: offsetTop, behavior: 'smooth' });
     }
 });
