@@ -384,57 +384,52 @@ function processImportedObject(obj) {
         alert('読み込んだデータが正しくありません');
         return;
     }
-    // use confirm dialogs so user can click buttons instead of typing
+    // ask user which mode: overwrite / merge / cancel
+    const choice = prompt('読み込み方法を入力してください\n1: 破棄して上書き\n2: 既存データとマージ\n3: キャンセル','1');
+    if (choice === null || choice === '3') {
+        return; // cancel
+    }
     let result;
-    if (confirm('読み込み: OK=破棄して上書き、キャンセル=マージまたは中止')) {
-        // overwrite
+    if (choice === '1') {
         result = {
             temps: obj.temps || [],
             bps: obj.bps || [],
             notes: obj.notes || []
         };
+    } else if (choice === '2') {
+        const existing = loadRecords();
+        result = {
+            temps: existing.temps.concat(obj.temps || []),
+            bps: existing.bps.concat(obj.bps || []),
+            notes: existing.notes.concat(obj.notes || [])
+        };
     } else {
-        // ask if user really wants to merge or cancel
-        if (confirm('マージしますか？OK=マージ、キャンセル=中止')) {
-            const existing = loadRecords();
-            result = {
-                temps: existing.temps.concat(obj.temps || []),
-                bps: existing.bps.concat(obj.bps || []),
-                notes: existing.notes.concat(obj.notes || [])
-            };
-        } else {
-            return; // cancel
-        }
+        alert('無効な選択です');
+        return;
     }
-    
-    // deduplicate and sort by timestamp
+    // dedupe & sort helper
     const deduplicateAndSort = (records) => {
         if (!records || records.length === 0) return [];
         const seen = new Set();
         const unique = [];
         records.forEach(r => {
-            if (!r.timestamp) return; // skip invalid
-            // create unique key based on timestamp and values
+            if (!r.timestamp) return;
             let key = r.timestamp;
             if (r.temp !== undefined) key += `|${r.temp}`;
             if (r.sys !== undefined) key += `|${r.sys}|${r.dia}|${r.pulse}`;
             if (r.text !== undefined) key += `|${r.text}`;
-            
             if (!seen.has(key)) {
                 seen.add(key);
                 unique.push(r);
             }
         });
-        // sort by timestamp ascending
-        unique.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        unique.sort((a,b)=> new Date(a.timestamp)-new Date(b.timestamp));
         return unique;
     };
-    
     result.temps = deduplicateAndSort(result.temps);
     result.bps = deduplicateAndSort(result.bps);
     result.notes = deduplicateAndSort(result.notes);
-    
-    ['temps', 'bps', 'notes'].forEach(k => {
+    ['temps','bps','notes'].forEach(k=>{
         localStorage.setItem(k, JSON.stringify(result[k]));
     });
     alert('インポート完了');
