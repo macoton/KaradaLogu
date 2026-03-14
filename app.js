@@ -212,6 +212,13 @@ function renderSummary() {
         tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.temp}</td>`;
         tbSummaryTemp.appendChild(tr);
     });
+    // add footer row with latest elapsed time for temp
+    if (temps.length > 0) {
+        const latestTemp = temps[temps.length - 1];
+        const fr = document.createElement('tr');
+        fr.innerHTML = `<td>最新経過</td><td>${elapsed(latestTemp.timestamp)}</td>`;
+        tbSummaryTemp.appendChild(fr);
+    }
     console.log('rendered temps', temps.length);
 
     const tbSummaryBP = document.querySelector('#tblSummaryBP tbody');
@@ -221,6 +228,13 @@ function renderSummary() {
         tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.sys}</td><td>${r.dia}</td><td>${r.pulse}</td>`;
         tbSummaryBP.appendChild(tr);
     });
+    // add footer row with latest elapsed time for BP
+    if (bps.length > 0) {
+        const latestBP = bps[bps.length - 1];
+        const fr = document.createElement('tr');
+        fr.innerHTML = `<td>最新経過</td><td colspan="3">${elapsed(latestBP.timestamp)}</td>`;
+        tbSummaryBP.appendChild(fr);
+    }
     console.log('rendered bps', bps.length);
 
     // restructure data by date then content
