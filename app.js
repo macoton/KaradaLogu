@@ -43,6 +43,11 @@ document.getElementById('filterSummary').addEventListener('change', () => {
         renderSummary();
     }
 });
+document.getElementById('groupSummary').addEventListener('change', () => {
+    if (sections.summary.classList.contains('active')) {
+        renderSummary();
+    }
+});
 
 // storage helpers
 function loadRecords() {
@@ -181,37 +186,53 @@ function renderOutput() {
 }
 
 // summary helpers and renderer
-// Get date key for summary (6 a.m. boundary using local time)
-// Returns YYYY-MM-DD in LOCAL time, not UTC
-function get6HourDateKey(isoTimestamp) {
+// Get date key for summary based on group unit
+function getDateKey(isoTimestamp, groupUnit) {
     const d = new Date(isoTimestamp);
-    const localHour = d.getHours();
-    let year = d.getFullYear();
-    let month = d.getMonth();
-    let date = d.getDate();
-    
-    if (localHour < 6) {
-        date--;  // Go back one day in local time
-    }
-    
-    // Check for month/year boundary
-    if (date <= 0) {
-        month--;
-        if (month < 0) {
-            year--;
-            month = 11;
+    if (groupUnit === 'day') {
+        // Use 6 a.m. boundary for day
+        const localHour = d.getHours();
+        let year = d.getFullYear();
+        let month = d.getMonth();
+        let date = d.getDate();
+        
+        if (localHour < 6) {
+            date--;  // Go back one day in local time
         }
-        // Get last date of previous month
-        const lastDayPrev = new Date(year, month + 1, 0).getDate();
-        date = lastDayPrev;
+        
+        // Check for month/year boundary
+        if (date <= 0) {
+            month--;
+            if (month < 0) {
+                year--;
+                month = 11;
+            }
+            // Get last date of previous month
+            const lastDayPrev = new Date(year, month + 1, 0).getDate();
+            date = lastDayPrev;
+        }
+        
+        // Format as YYYY-MM-DD using local values
+        const monthStr = String(month + 1).padStart(2, '0');
+        const dateStr = String(date).padStart(2, '0');
+        const result = `${year}-${monthStr}-${dateStr}`;
+        return result;
+    } else if (groupUnit === 'week') {
+        // Group by week (Monday to Sunday)
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+        const monday = new Date(d.setDate(diff));
+        const year = monday.getFullYear();
+        const month = String(monday.getMonth() + 1).padStart(2, '0');
+        const date = String(monday.getDate()).padStart(2, '0');
+        return `${year}-${month}-${date} (週)`;
+    } else if (groupUnit === 'month') {
+        // Group by month
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        return `${year}-${month} (月)`;
     }
-    
-    // Format as YYYY-MM-DD using local values
-    const monthStr = String(month + 1).padStart(2, '0');
-    const dateStr = String(date).padStart(2, '0');
-    const result = `${year}-${monthStr}-${dateStr}`;
-    console.log('get6HourDateKey', isoTimestamp, 'localHour=', localHour, 'result=', result);
-    return result;
+    return isoTimestamp; // fallback
 }
 
 function countToBar(count) {
@@ -235,6 +256,7 @@ function renderSummary() {
     console.log('loaded records', recs.temps.length, recs.bps.length, recs.notes.length);
     const { temps, bps, notes } = loadRecords();
     const filter = document.getElementById('filterSummary').value;
+    const groupUnit = document.getElementById('groupSummary').value;
     const filteredTemps = filterRecords(temps, filter);
     const filteredBps = filterRecords(bps, filter);
     const filteredNotes = filterRecords(notes, filter);
@@ -276,7 +298,7 @@ function renderSummary() {
     const allContents = new Set();
     const contentLatests = new Map();
     filteredNotes.forEach(r => {
-        const dateKey = get6HourDateKey(r.timestamp);
+        const dateKey = getDateKey(r.timestamp, groupUnit);
         const text = r.text;
         allContents.add(text);
         if (!dateMap.has(dateKey)) dateMap.set(dateKey, { contents: new Map(), latest: r.timestamp });

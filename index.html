@@ -16,7 +16,7 @@
         #section-settings button { font-size: 1em; padding: 6px 8px; }
         input { font-size: 2.2em; padding: 8px 12px; }
         section { display: none; font-size: 4em; }
-        section.active { display: block; width: 90vw; max-width: 1000px; }
+        section.active { display: block; width: 90vw; max-width: 1000px; position: relative; }
         table { border-collapse: collapse; width: auto; max-width: 80vw; }
         th, td { border: 1px solid #ccc; padding: 4px 6px; text-align: left; white-space: nowrap; }
         input, p#msg { font-size: inherit; }
@@ -24,6 +24,7 @@
         #notesContainer button { font-size: inherit; margin: 8px; padding: 16px 24px; }
         .nav-links { margin: 10px 0; font-size: 0.8em; }
         .nav-links a { margin: 0 5px; text-decoration: none; color: blue; }
+        .filter-container { position: sticky; top: 0; background: white; padding: 10px 0; z-index: 10; }
     </style>
 </head>
 <body>
@@ -47,13 +48,15 @@
 
     <section id="section-output">
         <h2>出力</h2>
-        <label for="filterOutput">期間フィルター:</label>
-        <select id="filterOutput">
-            <option value="all">すべて</option>
-            <option value="day">一日</option>
-            <option value="week">一週間</option>
-            <option value="month">ひと月</option>
-        </select>
+        <div class="filter-container">
+            <label for="filterOutput">期間フィルター:</label>
+            <select id="filterOutput">
+                <option value="all">すべて</option>
+                <option value="day">一日</option>
+                <option value="week">一週間</option>
+                <option value="month">ひと月</option>
+            </select>
+        </div>
         <div class="nav-links">
             <a href="#section-output">↑画面先頭</a> | <a href="#output-temp">体温</a> | <a href="#output-bp">血圧脈拍</a> | <a href="#output-notes">その他の記録</a> |
             <a href="#output-end">↓画面末尾</a>
@@ -102,13 +105,21 @@
 
     <section id="section-summary">
         <h2>まとめ</h2>
-        <label for="filterSummary">期間フィルター:</label>
-        <select id="filterSummary">
-            <option value="all">すべて</option>
-            <option value="day">一日</option>
-            <option value="week">一週間</option>
-            <option value="month">ひと月</option>
-        </select>
+        <div class="filter-container">
+            <label for="filterSummary">データ期間:</label>
+            <select id="filterSummary">
+                <option value="all">すべて</option>
+                <option value="day">一日</option>
+                <option value="week">一週間</option>
+                <option value="month">ひと月</option>
+            </select>
+            <label for="groupSummary">まとめる単位:</label>
+            <select id="groupSummary">
+                <option value="day">一日</option>
+                <option value="week">一週間</option>
+                <option value="month">ひと月</option>
+            </select>
+        </div>
         <div class="nav-links">
             <a href="#section-summary">↑画面先頭</a> | <a href="#summary-temp">体温</a> | <a href="#summary-bp">血圧脈拍</a> | <a href="#summary-notes">その他の記録</a> |
             <a href="#summary-end">↓画面末尾</a>
