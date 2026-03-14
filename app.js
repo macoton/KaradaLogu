@@ -24,7 +24,6 @@ function showSection(name) {
     }
 }
 
-document.getElementById('btnInput').addEventListener('click', () => showSection('input'));
 document.getElementById('btnOutput').addEventListener('click', () => {
     showSection('output');
 });
@@ -32,6 +31,18 @@ document.getElementById('btnSummary').addEventListener('click', () => {
     showSection('summary');
 });
 document.getElementById('btnSettings').addEventListener('click', () => showSection('settings'));
+
+// filter change events
+document.getElementById('filterOutput').addEventListener('change', () => {
+    if (sections.output.classList.contains('active')) {
+        renderOutput();
+    }
+});
+document.getElementById('filterSummary').addEventListener('change', () => {
+    if (sections.summary.classList.contains('active')) {
+        renderSummary();
+    }
+});
 
 // storage helpers
 function loadRecords() {
@@ -123,26 +134,45 @@ function formatTimestamp(ts) {
     }
 }
 
+// filter records by period
+function filterRecords(records, period) {
+    if (period === 'all') return records;
+    const now = new Date();
+    const cutoff = new Date(now);
+    if (period === 'day') {
+        cutoff.setDate(now.getDate() - 1);
+    } else if (period === 'week') {
+        cutoff.setDate(now.getDate() - 7);
+    } else if (period === 'month') {
+        cutoff.setMonth(now.getMonth() - 1);
+    }
+    return records.filter(r => new Date(r.timestamp) >= cutoff);
+}
+
 function renderOutput() {
     const { temps, bps, notes } = loadRecords();
+    const filter = document.getElementById('filterOutput').value;
+    const filteredTemps = filterRecords(temps, filter);
+    const filteredBps = filterRecords(bps, filter);
+    const filteredNotes = filterRecords(notes, filter);
     const tbTemp = document.querySelector('#tblTemp tbody');
     const tbBP = document.querySelector('#tblBP tbody');
     const tbNotes = document.querySelector('#tblNotes tbody');
     tbTemp.innerHTML = '';
-    temps.forEach(r => {
+    filteredTemps.forEach(r => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.temp}</td>`;
         tbTemp.appendChild(tr);
     });
     tbBP.innerHTML = '';
-    bps.forEach(r => {
+    filteredBps.forEach(r => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.sys}</td><td>${r.dia}</td><td>${r.pulse}</td>`;
         tbBP.appendChild(tr);
     });
     if (tbNotes) {
         tbNotes.innerHTML = '';
-        notes.forEach(r => {
+        filteredNotes.forEach(r => {
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.text}</td>`;
             tbNotes.appendChild(tr);
@@ -204,44 +234,48 @@ function renderSummary() {
     const recs = loadRecords();
     console.log('loaded records', recs.temps.length, recs.bps.length, recs.notes.length);
     const { temps, bps, notes } = loadRecords();
+    const filter = document.getElementById('filterSummary').value;
+    const filteredTemps = filterRecords(temps, filter);
+    const filteredBps = filterRecords(bps, filter);
+    const filteredNotes = filterRecords(notes, filter);
 
     const tbSummaryTemp = document.querySelector('#tblSummaryTemp tbody');
     tbSummaryTemp.innerHTML = '';
-    temps.forEach(r => {
+    filteredTemps.forEach(r => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.temp}</td>`;
         tbSummaryTemp.appendChild(tr);
     });
     // add footer row with latest elapsed time for temp
-    if (temps.length > 0) {
-        const latestTemp = temps[temps.length - 1];
+    if (filteredTemps.length > 0) {
+        const latestTemp = filteredTemps[filteredTemps.length - 1];
         const fr = document.createElement('tr');
         fr.innerHTML = `<td>最新経過</td><td>${elapsed(latestTemp.timestamp)}</td>`;
         tbSummaryTemp.appendChild(fr);
     }
-    console.log('rendered temps', temps.length);
+    console.log('rendered temps', filteredTemps.length);
 
     const tbSummaryBP = document.querySelector('#tblSummaryBP tbody');
     tbSummaryBP.innerHTML = '';
-    bps.forEach(r => {
+    filteredBps.forEach(r => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.sys}</td><td>${r.dia}</td><td>${r.pulse}</td>`;
         tbSummaryBP.appendChild(tr);
     });
     // add footer row with latest elapsed time for BP
-    if (bps.length > 0) {
-        const latestBP = bps[bps.length - 1];
+    if (filteredBps.length > 0) {
+        const latestBP = filteredBps[filteredBps.length - 1];
         const fr = document.createElement('tr');
         fr.innerHTML = `<td>最新経過</td><td colspan="3">${elapsed(latestBP.timestamp)}</td>`;
         tbSummaryBP.appendChild(fr);
     }
-    console.log('rendered bps', bps.length);
+    console.log('rendered bps', filteredBps.length);
 
     // restructure data by date then content
     const dateMap = new Map();
     const allContents = new Set();
     const contentLatests = new Map();
-    notes.forEach(r => {
+    filteredNotes.forEach(r => {
         const dateKey = get6HourDateKey(r.timestamp);
         const text = r.text;
         allContents.add(text);
