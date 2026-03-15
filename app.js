@@ -662,7 +662,8 @@ function initGoogleAPI(clientId, apiKey) {
             }
         });
     } else {
-        console.error('GIS not loaded');
+        console.error('GIS not loaded, retrying...');
+        setTimeout(() => initGoogleAPI(clientId, apiKey), 1000);
     }
 }
 
