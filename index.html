@@ -24,7 +24,7 @@
         #notesContainer button { font-size: inherit; margin: 8px; padding: 16px 24px; }
         .nav-links { margin: 10px 0; font-size: 0.8em; }
         .nav-links a { margin: 0 5px; text-decoration: none; color: blue; }
-        .filter-container { position: fixed; top: 0; left: 0; width: 100%; background: white; padding: 10px; z-index: 100; border-bottom: 1px solid #ccc; }
+        .filter-container { position: fixed; top: 0; left: 0; width: 100%; background: white; padding: 10px; z-index: 100; border-bottom: 1px solid #ccc; transform: scale(calc(1 / var(--zoom))); transform-origin: top left; }
     </style>
 </head>
 <body>
