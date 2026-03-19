@@ -88,6 +88,7 @@ function addTempRecord(value) {
     temps.push({ timestamp: new Date().toISOString(), temp: value });
     saveRecords({ temps, bps, notes });
     maybeAutoSync();
+    console.log('addTempRecord completed');
 } 
 
 function addBPRecord(sys, dia, pulse) {
@@ -95,6 +96,7 @@ function addBPRecord(sys, dia, pulse) {
     bps.push({ timestamp: new Date().toISOString(), sys, dia, pulse });
     saveRecords({ temps, bps, notes });
     maybeAutoSync();
+    console.log('addBPRecord completed');
 } 
 
 function addNoteRecord(text) {
@@ -103,6 +105,7 @@ function addNoteRecord(text) {
     saveRecords({ temps, bps, notes });
     maybeAutoSync();
     renderNotes();
+    console.log('addNoteRecord completed');
 }
 
 // render notes buttons (used on input screen)
@@ -419,7 +422,6 @@ function handleInput(e) {
     addNoteRecord(s);
     msg.textContent = `メモ "${s}" を記録しました。`;
     clearInput();
-    renderNotes();
 }
 
 // use Enter key instead of input event
