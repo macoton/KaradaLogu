@@ -24,16 +24,28 @@ function showSection(name) {
     }
 }
 
-document.getElementById('btnInput').addEventListener('click', () => {
-    showSection('input');
-});
-document.getElementById('btnOutput').addEventListener('click', () => {
-    showSection('output');
-});
-document.getElementById('btnSummary').addEventListener('click', () => {
-    showSection('summary');
-});
-document.getElementById('btnSettings').addEventListener('click', () => showSection('settings'));
+// general navigation binding
+function bindNavButtons() {
+    const navMap = {
+        btnInput: 'input',
+        btnOutput: 'output',
+        btnSummary: 'summary',
+        btnSettings: 'settings'
+    };
+    Object.entries(navMap).forEach(([btnId, sectionName]) => {
+        const btn = document.getElementById(btnId);
+        if (!btn) {
+            console.warn(`Navigation button not found: ${btnId}`);
+            return;
+        }
+        btn.addEventListener('click', () => {
+            console.log(`nav click ${btnId} -> ${sectionName}`);
+            showSection(sectionName);
+        });
+    });
+}
+
+bindNavButtons();
 
 // filter change events
 document.getElementById('filterOutput').addEventListener('change', () => {
