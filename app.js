@@ -88,7 +88,6 @@ function addTempRecord(value) {
     temps.push({ timestamp: new Date().toISOString(), temp: value });
     saveRecords({ temps, bps, notes });
     maybeAutoSync();
-    showSection('output'); // switch to output after input
 } 
 
 function addBPRecord(sys, dia, pulse) {
@@ -96,7 +95,6 @@ function addBPRecord(sys, dia, pulse) {
     bps.push({ timestamp: new Date().toISOString(), sys, dia, pulse });
     saveRecords({ temps, bps, notes });
     maybeAutoSync();
-    showSection('output'); // switch to output after input
 } 
 
 function addNoteRecord(text) {
@@ -105,7 +103,6 @@ function addNoteRecord(text) {
     saveRecords({ temps, bps, notes });
     maybeAutoSync();
     renderNotes();
-    showSection('output'); // switch to output after input
 }
 
 // render notes buttons (used on input screen)
