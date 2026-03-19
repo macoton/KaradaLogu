@@ -31,8 +31,21 @@
         input, p#msg { font-size: inherit; }
         #notesContainer { max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; }
         #notesContainer button { font-size: inherit; margin: 8px; padding: 16px 24px; }
-        .nav-links { margin: 10px 0; font-size: 0.8em; }
-        .nav-links a { margin: 0 5px; text-decoration: none; color: blue; }
+        .nav-links {
+            margin: 10px 0;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .nav-links a {
+            margin: 0 5px;
+            text-decoration: none;
+            color: blue;
+            white-space: nowrap;
+        }
         .filter-container { position: fixed; top: 50px; left: 0; width: 100%; background: white; padding: 10px; z-index: 150; border-bottom: 1px solid #ccc; transform: scale(calc(1 / var(--zoom))); transform-origin: top left; display: flex; flex-wrap: wrap; gap: 10px; }
     </style>
 </head>
