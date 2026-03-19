@@ -24,6 +24,9 @@ function showSection(name) {
     }
 }
 
+document.getElementById('btnInput').addEventListener('click', () => {
+    showSection('input');
+});
 document.getElementById('btnOutput').addEventListener('click', () => {
     showSection('output');
 });
