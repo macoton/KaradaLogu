@@ -37,19 +37,27 @@
             display: flex;
             align-items: center;
             flex-wrap: nowrap;
-            overflow-x: auto;
+            overflow-x: hidden;
             padding-bottom: 4px;
-            -webkit-overflow-scrolling: touch;
+            gap: 4px;
+            width: 100%;
+            white-space: nowrap;
         }
         .nav-links a {
-            margin: 0 5px;
+            margin: 0;
+            padding: 2px 4px;
             text-decoration: none;
             color: blue;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 22%;
+            display: inline-block;
+            vertical-align: middle;
         }
-        .filter-container { position: fixed; top: 50px; left: 0; width: 100%; background: white; padding: 10px; z-index: 150; border-bottom: 1px solid #ccc; transform: scale(calc(1 / var(--zoom))); transform-origin: top left; display: flex; flex-wrap: nowrap; gap: 10px; overflow-x: auto; }
+        .filter-container { position: fixed; top: 50px; left: 0; width: 100%; background: white; padding: 10px; z-index: 150; border-bottom: 1px solid #ccc; transform: scale(calc(1 / var(--zoom))); transform-origin: top left; display: flex; flex-wrap: nowrap; gap: 10px; overflow-x: hidden; }
         .filter-container label, .filter-container select { white-space: nowrap; }
-        .filter-container select { min-width: 120px; }
+        .filter-container select { min-width: 90px; }
     </style>
 </head>
 <body>
