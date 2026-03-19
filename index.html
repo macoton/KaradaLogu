@@ -6,7 +6,15 @@
     <style>
         body { font-family: sans-serif; margin: 20px; --zoom:1; transform-origin: top left; transform: scale(var(--zoom)); }
         h1 { font-size: 8em; font-weight: bold; }
-        nav { display: flex; flex-wrap: nowrap; justify-content: flex-start; }
+        nav {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            position: relative;
+            z-index: 200;
+            background: #fff;
+            border-bottom: 1px solid #ccc;
+        }
         nav button { margin-right: 10px; }
         nav button.active { background-color: #007bff; color: white; opacity: 1; }
         nav button { opacity: 0.6; transition: opacity 0.2s; }
@@ -25,7 +33,7 @@
         #notesContainer button { font-size: inherit; margin: 8px; padding: 16px 24px; }
         .nav-links { margin: 10px 0; font-size: 0.8em; }
         .nav-links a { margin: 0 5px; text-decoration: none; color: blue; }
-        .filter-container { position: fixed; top: 0; left: 0; width: 100%; background: white; padding: 10px; z-index: 100; border-bottom: 1px solid #ccc; transform: scale(calc(1 / var(--zoom))); transform-origin: top left; display: flex; flex-wrap: wrap; gap: 10px; }
+        .filter-container { position: fixed; top: 50px; left: 0; width: 100%; background: white; padding: 10px; z-index: 150; border-bottom: 1px solid #ccc; transform: scale(calc(1 / var(--zoom))); transform-origin: top left; display: flex; flex-wrap: wrap; gap: 10px; }
     </style>
 </head>
 <body>
