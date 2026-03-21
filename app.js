@@ -862,7 +862,13 @@ if (btnAutoSyncEl) {
 // start on input
 showSection('input');
 // load drive configuration for GIS
-loadDriveConfig();
+loadDriveConfig().then(() => {
+    // if auto sync is enabled, auto-authorize google drive
+    if (autoSync && tokenClient) {
+        console.log('Auto-sync enabled: Auto-authorizing Google Drive');
+        authorizeGoogleDrive();
+    }
+});
 
 // zoom functionality
 let zoomLevel = 1;
