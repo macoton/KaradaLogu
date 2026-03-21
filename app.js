@@ -47,18 +47,41 @@ function bindNavButtons() {
 
 bindNavButtons();
 
+// filter persistence helpers
+function saveFilterPreferences() {
+    const filterOutput = document.getElementById('filterOutput').value;
+    const filterSummary = document.getElementById('filterSummary').value;
+    const groupSummary = document.getElementById('groupSummary').value;
+    localStorage.setItem('filterOutput', filterOutput);
+    localStorage.setItem('filterSummary', filterSummary);
+    localStorage.setItem('groupSummary', groupSummary);
+}
+
+function loadFilterPreferences() {
+    const filterOutput = localStorage.getItem('filterOutput') || 'week';
+    const filterSummary = localStorage.getItem('filterSummary') || 'week';
+    const groupSummary = localStorage.getItem('groupSummary') || 'day';
+    
+    document.getElementById('filterOutput').value = filterOutput;
+    document.getElementById('filterSummary').value = filterSummary;
+    document.getElementById('groupSummary').value = groupSummary;
+}
+
 // filter change events
 document.getElementById('filterOutput').addEventListener('change', () => {
+    saveFilterPreferences();
     if (sections.output.classList.contains('active')) {
         renderOutput();
     }
 });
 document.getElementById('filterSummary').addEventListener('change', () => {
+    saveFilterPreferences();
     if (sections.summary.classList.contains('active')) {
         renderSummary();
     }
 });
 document.getElementById('groupSummary').addEventListener('change', () => {
+    saveFilterPreferences();
     if (sections.summary.classList.contains('active')) {
         renderSummary();
     }
@@ -860,6 +883,7 @@ if (btnAutoSyncEl) {
 }
 
 // start on input
+loadFilterPreferences();
 showSection('input');
 // load drive configuration for GIS
 loadDriveConfig().then(() => {
