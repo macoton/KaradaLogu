@@ -254,10 +254,10 @@ function getDateKey(isoTimestamp, groupUnit) {
             date = lastDayPrev;
         }
         
-        // Format as YYYY-MM-DD using local values
-        const monthStr = String(month + 1).padStart(2, '0');
-        const dateStr = String(date).padStart(2, '0');
-        const result = `${year}-${monthStr}-${dateStr}`;
+        // Format as YYYY/M/D using local values
+        const monthStr = String(month + 1);
+        const dateStr = String(date);
+        const result = `${year}/${monthStr}/${dateStr}`;
         return result;
     } else if (groupUnit === 'week') {
         // Group by week (Monday to Sunday)
@@ -265,14 +265,14 @@ function getDateKey(isoTimestamp, groupUnit) {
         const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
         const monday = new Date(d.setDate(diff));
         const year = monday.getFullYear();
-        const month = String(monday.getMonth() + 1).padStart(2, '0');
-        const date = String(monday.getDate()).padStart(2, '0');
-        return `${year}-${month}-${date} (週)`;
+        const month = String(monday.getMonth() + 1);
+        const date = String(monday.getDate());
+        return `${year}/${month}/${date} (週)`;
     } else if (groupUnit === 'month') {
         // Group by month
         const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        return `${year}-${month} (月)`;
+        const month = String(d.getMonth() + 1);
+        return `${year}/${month} (月)`;
     }
     return isoTimestamp; // fallback
 }
@@ -698,7 +698,10 @@ function initGoogleAPI(clientId, apiKey) {
                     }
                 } else {
                     console.error('Token response:', tokenResponse);
-                    alert('認証に失敗しました');
+                    const retry = confirm('認証に失敗しました。再試行しますか？');
+                    if (retry) {
+                        tokenClient.requestAccessToken({ prompt: 'consent' });
+                    }
                 }
             }
         });
