@@ -638,7 +638,7 @@ function autoSyncDrive() {
             return saveToDrive();
         });
     }).catch(err => {
-        console.error('autoSync error', err);
+        handleDriveAuthFailure(err);
     });
 }
 
@@ -656,7 +656,35 @@ function showDriveButtons(show) {
             gbtn.textContent = 'Google Drive認証';
         }
     }
-} 
+}
+
+function handleDriveAuthFailure(err) {
+    console.error('Google Drive auth failure', err);
+    isGoogleDriveAuthorized = false;
+    accessToken = null;
+    showDriveButtons(false);
+
+    let message = '不明なエラー';
+    if (!err) {
+        message = '原因不明';
+    } else if (typeof err === 'string') {
+        message = err;
+    } else if (err.message) {
+        message = err.message;
+    } else if (err.error) {
+        message = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
+    }
+
+    alert('Google Drive認証/通信エラー: ' + message);
+
+    if (confirm('再認証しますか？')) {
+        if (!tokenClient) {
+            alert('Google API 初期化に失敗しました');
+        } else {
+            authorizeGoogleDrive();
+        }
+    }
+}
 
 // load CLIENT_ID/API_KEY then init GIS token client
 async function loadDriveConfig() {
@@ -737,11 +765,7 @@ function saveToDrive() {
             createDriveFile(blob);
         }
     }).catch(err => {
-        console.error('saveToDrive query error', err);
-        alert('Drive保存エラー');
-        isGoogleDriveAuthorized = false;
-        accessToken = null;
-        showDriveButtons(false);
+        handleDriveAuthFailure(err);
     });
 }
 
@@ -761,11 +785,7 @@ function createDriveFile(fileBlob) {
             return res.text().then(txt => { throw new Error(txt); });
         }
     }).catch(err => {
-        console.error(err);
-        alert('Drive保存エラー');
-        isGoogleDriveAuthorized = false;
-        accessToken = null;
-        showDriveButtons(false);
+        handleDriveAuthFailure(err);
     });
 }
 
@@ -781,11 +801,7 @@ function updateDriveFile(fileId, fileBlob) {
             return res.text().then(txt => { throw new Error(txt); });
         }
     }).catch(err => {
-        console.error(err);
-        alert('Drive保存エラー');
-        isGoogleDriveAuthorized = false;
-        accessToken = null;
-        showDriveButtons(false);
+        handleDriveAuthFailure(err);
     });
 }
 
@@ -800,6 +816,9 @@ function queryDriveFile(name) {
             .then(r => {
                 if (!r.ok) {
                     console.warn('queryDriveFile http status', r.status, r.statusText);
+                    if (r.status === 401 || r.status === 403) {
+                        throw new Error('認証エラー: status=' + r.status);
+                    }
                     return r.json().then(errData => { throw errData; });
                 }
                 return r.json();
@@ -816,8 +835,24 @@ function queryDriveFile(name) {
     }
     // sequentially try spaces with error catch to continue
     return trySpace(spacesList[0]).catch(err => {
+        if (err && typeof err === 'object' && (err.message && err.message.includes('認証エラー'))) {
+            handleDriveAuthFailure(err);
+            return Promise.reject(err);
+        }
+        if (typeof err === 'string' && err.includes('認証エラー')) {
+            handleDriveAuthFailure(err);
+            return Promise.reject(err);
+        }
         console.warn('queryDriveFile space', spacesList[0], 'failed', err);
         return trySpace(spacesList[1]).catch(err2 => {
+            if (err2 && typeof err2 === 'object' && (err2.message && err2.message.includes('認証エラー'))) {
+                handleDriveAuthFailure(err2);
+                return Promise.reject(err2);
+            }
+            if (typeof err2 === 'string' && err2.includes('認証エラー')) {
+                handleDriveAuthFailure(err2);
+                return Promise.reject(err2);
+            }
             console.warn('queryDriveFile space', spacesList[1], 'failed', err2);
             return null;
         });
@@ -846,10 +881,7 @@ function loadFromDrive() {
         if (obj) processImportedObject(obj);
     }).catch(err => {
         console.error('loadFromDrive error', err);
-        alert('Drive読み込みエラー');
-        isGoogleDriveAuthorized = false;
-        accessToken = null;
-        showDriveButtons(false);
+        handleDriveAuthFailure(err);
     });
 }
 
