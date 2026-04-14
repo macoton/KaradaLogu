@@ -305,14 +305,29 @@ function renderSummary() {
 
     const tbSummaryTemp = document.querySelector('#tblSummaryTemp tbody');
     tbSummaryTemp.innerHTML = '';
+    const tempMap = new Map();
     filteredTemps.forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.temp}</td>`;
-        tbSummaryTemp.appendChild(tr);
+        const dateKey = getDateKey(r.timestamp, 'day');
+        if (!tempMap.has(dateKey)) tempMap.set(dateKey, []);
+        tempMap.get(dateKey).push(r);
+    });
+    const sortedTempDates = Array.from(tempMap.keys()).sort((a, b) => {
+        const [ay, am, ad] = a.split('/').map(Number);
+        const [by, bm, bd] = b.split('/').map(Number);
+        return new Date(ay, am - 1, ad) - new Date(by, bm - 1, bd);
+    });
+    sortedTempDates.forEach(dateKey => {
+        const records = tempMap.get(dateKey);
+        records.forEach((r, index) => {
+            const count = index + 1;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${dateKey} ${count}回目</td><td>${r.temp}</td>`;
+            tbSummaryTemp.appendChild(tr);
+        });
     });
     // add footer row with latest elapsed time for temp
     if (filteredTemps.length > 0) {
-        const latestTemp = filteredTemps[filteredTemps.length - 1];
+        const latestTemp = filteredTemps.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
         const fr = document.createElement('tr');
         fr.innerHTML = `<td>最新経過</td><td>${elapsed(latestTemp.timestamp)}</td>`;
         tbSummaryTemp.appendChild(fr);
@@ -321,14 +336,29 @@ function renderSummary() {
 
     const tbSummaryBP = document.querySelector('#tblSummaryBP tbody');
     tbSummaryBP.innerHTML = '';
+    const bpMap = new Map();
     filteredBps.forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${formatTimestamp(r.timestamp)}</td><td>${r.sys}</td><td>${r.dia}</td><td>${r.pulse}</td>`;
-        tbSummaryBP.appendChild(tr);
+        const dateKey = getDateKey(r.timestamp, 'day');
+        if (!bpMap.has(dateKey)) bpMap.set(dateKey, []);
+        bpMap.get(dateKey).push(r);
+    });
+    const sortedBpDates = Array.from(bpMap.keys()).sort((a, b) => {
+        const [ay, am, ad] = a.split('/').map(Number);
+        const [by, bm, bd] = b.split('/').map(Number);
+        return new Date(ay, am - 1, ad) - new Date(by, bm - 1, bd);
+    });
+    sortedBpDates.forEach(dateKey => {
+        const records = bpMap.get(dateKey);
+        records.forEach((r, index) => {
+            const count = index + 1;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${dateKey} ${count}回目</td><td>${r.sys}</td><td>${r.dia}</td><td>${r.pulse}</td>`;
+            tbSummaryBP.appendChild(tr);
+        });
     });
     // add footer row with latest elapsed time for BP
     if (filteredBps.length > 0) {
-        const latestBP = filteredBps[filteredBps.length - 1];
+        const latestBP = filteredBps.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
         const fr = document.createElement('tr');
         fr.innerHTML = `<td>最新経過</td><td colspan="3">${elapsed(latestBP.timestamp)}</td>`;
         tbSummaryBP.appendChild(fr);
@@ -368,7 +398,13 @@ function renderSummary() {
     }
 
     // sort dates ascending
-    const sortedDates = Array.from(dateMap.keys()).sort();
+    const sortedDates = Array.from(dateMap.keys()).sort((a, b) => {
+        const cleanA = a.replace(' (週)', '');
+        const cleanB = b.replace(' (週)', '');
+        const [ay, am, ad] = cleanA.split('/').map(Number);
+        const [by, bm, bd] = cleanB.split('/').map(Number);
+        return new Date(ay, am - 1, ad) - new Date(by, bm - 1, bd);
+    });
     const sortedContents = Array.from(allContents).sort();
 
     // build header
