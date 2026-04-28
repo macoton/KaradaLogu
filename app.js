@@ -603,6 +603,8 @@ function handleImportClick() {
 let isGoogleDriveAuthorized = false;
 let accessToken = null;
 let tokenClient = null;
+let authRetryCount = 0;
+const MAX_AUTH_RETRIES = 1;
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 const EXPORT_FILENAME = 'karadalogu_export.json';
 
@@ -713,12 +715,9 @@ function handleDriveAuthFailure(err) {
 
     alert('Google Drive認証/通信エラー: ' + message);
 
-    if (confirm('再認証しますか？')) {
-        if (!tokenClient) {
-            alert('Google API 初期化に失敗しました');
-        } else {
-            authorizeGoogleDrive();
-        }
+    if (tokenClient && authRetryCount < MAX_AUTH_RETRIES) {
+        authRetryCount += 1;
+        authorizeGoogleDrive();
     }
 }
 
@@ -748,6 +747,7 @@ function initGoogleAPI(clientId, apiKey) {
                 if (tokenResponse && tokenResponse.access_token) {
                     accessToken = tokenResponse.access_token;
                     isGoogleDriveAuthorized = true;
+                    authRetryCount = 0;
                     showDriveButtons(true);
                     console.log('Obtained access token', accessToken);
                     alert('Google Drive 認証完了');
@@ -762,8 +762,8 @@ function initGoogleAPI(clientId, apiKey) {
                     }
                 } else {
                     console.error('Token response:', tokenResponse);
-                    const retry = confirm('認証に失敗しました。再試行しますか？');
-                    if (retry) {
+                    if (tokenClient && authRetryCount < MAX_AUTH_RETRIES) {
+                        authRetryCount += 1;
                         tokenClient.requestAccessToken({ prompt: 'consent' });
                     }
                 }
